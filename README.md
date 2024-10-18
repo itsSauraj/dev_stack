@@ -88,6 +88,7 @@ DATABASES = {
 or
 #####  For using SQLite
 ```python
+# To use this you will need to create a file named 'db.sqlite3'
 
 DATABASES = {
     'default': {
