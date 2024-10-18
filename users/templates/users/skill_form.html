@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<!-- Main Section -->
+<main class="formPage my-xl">
+    <div class="container w-[90%] sm:w-[90%] md:w-[50%] lg:w-[30%] xl:w-[30%] 2xl:w-[30%] 3xl:w-[30%]">
+        <div class="formWrapper">
+            <a class="backButton" href="{% url 'profile' %}"><i class="fa-solid fa-chevron-left"></i></a>
+            <br>
+
+            <form class="form" method="POST" action="">
+                {% csrf_token %}
+
+                {% for field in form %}
+                <div class="form__field">
+                    <label for="formInput#text"> {{field.label}}</label>
+                    {{field}}
+                </div>
+                {% endfor %}
+
+                <div class="flex">
+                    <input class="btn btn--sub btn--lg  my-md" type="submit" value="Submit" />
+
+                    {% if page == "update" %}
+                        <a class="btn btn--sub btn--lg my-md bg-red-500 text-black"
+                            
+                            onclick="toggleModal('{{ skill.id }}', '{{ skill.name }}')"
+                        >
+                            Delete
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+    {% if page == "update" %}
+        {% include 'users/delete_skill.html' %}
+    {% endif %}
+</main>
+
+
+
+{% endblock %}

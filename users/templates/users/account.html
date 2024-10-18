@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+  {{profile.name}} | Profile
+{% endblock %}
+
+{% block content %}
+
+<!-- Main Section -->
+<main class="settingsPage profile my-md">
+  <div class="container">
+    <div class="layout">
+      <div class="column column--1of3">
+        <div class="card text-center">
+          <div class="card__body dev">
+            <div class="flex justify-center">
+              <img class="avatar avatar--lg" src="{% static profile.avatar_url %}" alt="image" />
+            </div>
+            <h2 class="dev__name">{{profile.name}}</h2>
+            <p class="dev__title">{{profile.short_intro}}</p>
+
+            <ul class="dev__social">
+              {% if profile.social_github %}
+              <li>
+                <a title="Github" href="{{profile.social_github}}" target="_blank"
+                  class="text-4xl p-2  hover:opacity-75"
+                >
+                  <i class="fa-brands fa-github"></i>
+                </a>
+              </li>
+              {% endif %}
+
+
+              {% if profile.social_twitter %}
+              <li>
+                <a title="Twitter" href="{{profile.social_twitter}}" target="_blank"
+                  class="text-4xl p-2  hover:opacity-75"
+                >
+                  <i class="fa-brands fa-x-twitter"></i>
+                </a>
+              </li>
+              {% endif %}
+
+              {% if profile.social_linkedin %}
+              <li>
+                <a title="LinkedIn" href="{{profile.social_linkedin}}" target="_blank"
+                  class="text-4xl p-2  hover:opacity-75"
+                >
+                  <i class="fa-brands fa-linkedin"></i>
+                </a>
+              </li>
+              {% endif %}
+
+              {% if profile.social_youtube %}
+              <li>
+                <a title="Personal Website" href="{{profile.social_youtube}}" target="_blank"
+                  class="text-4xl p-2  hover:opacity-75"
+                >
+                  <i class="fa-brands fa-youtube"></i>
+                </a>
+              </li>
+              {% endif %}
+
+              {% if profile.social_website %}
+              <li>
+                <a title="Personal Website" href="{{profile.social_website}}" target="_blank"
+                  class="text-4xl p-2  hover:opacity-75"
+                >
+                  <i class="fa-solid fa-link"></i>
+                </a>
+              </li>
+              {% endif %}
+
+            </ul>
+
+            {% if request.user.is_authenticated and not view %}
+            <div class="felx justify-center gap-2">
+              <a 
+                href="{% url 'update-profile' %}"
+                class="text-2xl py-2 px-4 underline hover:opacity-75 text-blue-500"
+                style="transition: 'all 300ms ease-in'"
+              ><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+              <button 
+                class="text-2xl py-2 px-4 underline hover:opacity-75 text-red-500"
+                style="transition: 'all 300ms ease-in'"
+                onclick="toggleModalUser('{{ request.user.username }}')"
+              ><i class="fa-solid fa-trash"></i> Delete</button>
+              <a href="{% url 'logout' %}"
+                class="text-2xl py-2 px-4 underline hover:opacity-75 text-yellow-500">
+                <i class="fa-solid fa-right-from-bracket"></i> logout
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="column column--2of3">
+        <div class="devInfo">
+          <h3 class="devInfo__title">About Me</h3>
+          <p class="devInfo__about">{{profile.short_bio}}</p>
+        </div>
+        <div class="settings">
+          <h3 class="settings__title">Skills</h3>
+          {% if not view %}
+          <a class="tag tag--pill tag--sub settings__btn tag--lg hover:bg-gray-200" href="{% url 'add-skill' request.user.profile.id %}"><i
+            class="im im-plus"></i> Add Skill</a>
+          {% endif %}
+        </div>
+
+        <div class="w-full mt-2 flex flex-wrap gap-2">
+          {% for skill in profile.skill_set %}
+            {% if request.user.profile.id == profile.id %}
+              <a
+                href="{% url 'update-skill' skill.id %}" 
+                class="flex gap-0 cursor-pointer">
+                <p class="rounded-l-[45px] px-3 p-1 bg-[{{ skill.bg_color }}] text-[{{ skill.fg_color }}]">
+                  {{skill.name}}
+                </p>
+                <p class="rounded-r-[45px] px-3 p-1 bg-[{{ skill.bg_color }}] text-[{{ skill.fg_color }}] opacity-75">
+                  {{skill.level}}
+                </p>
+              </a>
+            {% else %}
+              <span
+                class="flex gap-0 cursor-default">
+                <p class="rounded-l-[45px] px-3 p-1 bg-[{{ skill.bg_color }}] text-[{{ skill.fg_color }}]">
+                  {{skill.name}}
+                </p>
+                <p class="rounded-r-[45px] px-3 p-1 bg-[{{ skill.bg_color }}] text-[{{ skill.fg_color }}] opacity-75">
+                  {{skill.level}}
+                </p>
+              </span>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <div class="settings mb-8">
+          <h3 class="settings__title">Projects</h3>
+          {% if not view %}
+          <a class="tag tag--pill tag--sub settings__btn tag--lg hover:bg-gray-200" href="{% url 'create-project' %}"><i
+              class="im im-plus"></i> Add Project</a>
+          {% endif %}
+        </div>
+        <section id="user-projects" class="flex flex-col gap-2 border border-gray-200">
+        {% for project in projects %}
+          <div class="shadow-inner shadow-2xl space-between items-center flex hover:bg-[#cbd5e1] transition-all ease-in duration-300">
+            <div class="w-[200px] pl-10 flex-none">
+              <a href="{% url 'project' project.id %}">
+                <img class="w-[200px] h-[110px] rounded" src="{% static project.poster_url %}" alt="Project Thumbnail" />
+              </a>
+            </div>
+            <div class="p-10 grow">
+              <a href="{% url 'project' project.id %}">{{project.title}}</a>
+              <p>{{project.description|slice:"150"}}</p>
+              <div class="w-full m-2">
+                {% for tag in project.tags.all %}
+                  <span class="border border-1 border-blue-800 rounded-[45px] px-3 p-1 bg-blue-200 text-blue-800 text-base">{{ tag.name }}</span>
+                {% endfor %}
+              </div>
+            </div>
+            {% if not view %}
+              <div class="w-[100px] flex flex-col p-10 flex-none">
+                <a class="tag tag--pill tag--main settings__btn" href="{% url 'update-project' project.id %}?next={% url 'update-profile' %}"><i
+                    class="im im-edit"></i> Edit</a>
+
+                {% if request.user.is_authenticated %}
+                  <button class="tag tag--pill tag--main settings__btn" onclick="toggleModal('{{ project.username }}', '{{ project.title }}')">Delete</button>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+        <section>
+      </div>
+    </div>
+  </div>
+</main>
+{% if request.user.is_authenticated %}
+  {% include 'projects/delete_modal.html' %}
+{% endif %}
+<div></div>
+{% if request.user.is_authenticated %}
+{% include 'users/delete_user.html' %}
+{% endif %}
+
+{% if view %}
+  {% include 'footer.html' %}
+{% endif %}
+
+{% endblock %}

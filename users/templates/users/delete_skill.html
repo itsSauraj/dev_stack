@@ -1,0 +1,39 @@
+<div class="fixed z-10 overflow-y-auto top-0 w-full left-0 hidden absolute" id="modal">
+  <div class="flex items-center justify-center min-height-100vh pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 transition-opacity">
+      <div class="absolute inset-0 bg-gray-900 opacity-75" />
+    </div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+    <div class="inline-block align-center bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+      
+      <form method="POST" action="{% url 'delete-skill' skill.id %}?next={% url 'profile' %}">
+        {% csrf_token %}
+        <input type="text" name="pk" id="project_id" class="hidden" value="none">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4" id="delete-modal-message"></div>
+        <div class="bg-gray-200 px-4 py-3 text-right">
+          <button type="button" class="py-2 px-4 bg-gray-500 text-white rounded hover:bg-gray-700 mr-2" onclick="toggleModal()"><i class="fas fa-times"></i> Cancel</button>
+          <input id="delete-confirm" value="confirm" type="submit" class="py-2 px-4 bg-red-500 text-white rounded font-medium hover:bg-blue-700 mr-2 transition duration-500" />
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  function toggleModal(project_id, title) { 
+    document.getElementById('modal').classList.toggle('hidden')
+    deleteMessage = `
+      Are you sure you want to delete this skill?
+      <br/>
+      <span class="bg-[#cbd5e1] py-1 px-3 rounded-mdx text-sm">
+        ${title}
+      </span>
+    `
+    document.getElementById('delete-modal-message').innerHTML = deleteMessage
+
+    if (project_id !== 'none') {
+      document.getElementById('project_id').value = project_id
+    }
+  } 
+</script>

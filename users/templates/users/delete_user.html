@@ -1,0 +1,53 @@
+<div class="fixed z-10 overflow-y-auto top-0 w-full h-[100svh] left-0 hidden absolute" id="modal-user">
+  <div class="flex items-center justify-center min-height-100vh pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 transition-opacity">
+      <div class="absolute inset-0 bg-gray-900 opacity-75"></div>
+    </div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+    <div class="inline-block align-center bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+      
+      <form method="POST" action="{% url 'user-delete' %}">
+        {% csrf_token %}
+        <input type="text" name="pk" id="project_id" class="hidden" value="none">
+        <div class="form__field">
+            <label for="formInput#text">Please enter your username to confirm.</label>
+            <input class="input input--text" id="formInput#text" type="text" name="username" placeholder="Enter your username..."
+              onkeyup="checkUsername(this.value)"
+            />
+        </div>
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4" id="delete-user-modal-message"></div>
+        <div class="px-4 py-3 text-right">
+          <button type="button" class="py-2 px-4 bg-gray-500 text-white rounded hover:bg-gray-700 mr-2" onclick="toggleModalUser()">Cancel</button>
+          <input disabled id="delete-user-confirm" value="confirm" type="submit" class="py-2 px-4 bg-[#cbd5e1] text-black rounded font-medium mr-2 transition duration-500 cursor-not-allowed" />
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleModalUser(username) { 
+
+    document.getElementById('modal-user').classList.toggle('hidden')
+    deleteMessage = `
+      Are you sure you want to delete your account with username:
+      <span class="bg-[#cbd5e1] px-2 rounded-mdx text-3xl rounded-xl">${username}</span>
+      ? This action cannot be undone.
+    `
+    document.getElementById('delete-user-modal-message').innerHTML = deleteMessage
+  }
+
+  const deleteConfirm = document.getElementById('delete-user-confirm')
+  function checkUsername(username) {
+    if (username === "{{ request.user.username }}") {
+      deleteConfirm.disabled = false
+      deleteConfirm.classList.remove('cursor-not-allowed', 'text-black', 'bg-[#cbd5e1]')
+      deleteConfirm.classList.add('bg-red-500', 'hover:bg-red-800','cursor-pointer', 'text-white')
+    } else {
+      deleteConfirm.disabled = true
+      deleteConfirm.classList.add('cursor-not-allowed', 'text-black', 'bg-[#cbd5e1]')
+      deleteConfirm.classList.remove('bg-red-500', 'hover:bg-red-800','cursor-pointer', 'text-white')
+    }
+  }
+
+</script>
