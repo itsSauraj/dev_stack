@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, HttpResponse
+
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-
 from django.contrib.auth.decorators import login_required
-
 from django.contrib.auth.models import User
+
 from projects.models import Project
 
 from .forms import SkillForm, UserRegistrationForm, ProfileForm
@@ -25,11 +26,8 @@ def login_user(request):
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
-            return render(request, "users/login_register.html", {"error": "User does not exist"})
-        
-        if user.check_password(password) == False:
-            return render(request, "users/login_register.html", {"error": "Incorrect password"})
-        
+            pass
+                    
         user = authenticate(username=username, password=password)
         
         if user is not None:
@@ -39,7 +37,7 @@ def login_user(request):
             
             return redirect('profile')
         else:
-            return render(request, "users/login_register.html", {"error": "something went wrong", 'user': user})
+            messages.error(request, "Invalid username or password")
 			
     
     return render(request, "users/login_register.html")
@@ -47,6 +45,7 @@ def login_user(request):
 
 def logout_user(request):
     logout(request)
+    messages.info(request, "User was logged out")
     return redirect('login')
 
 def has_permission(profile, project_id):
@@ -74,11 +73,10 @@ def register_user(request):
             user = form.save(commit=False)
             user.username = user.username.lower()
             
-            
-            
             # user.is_superuser = True
             # user.is_staff = True
             user.save()
+            messages.success(request, "Account was created for " + user.username)
             return redirect('login')
     
     return render(request, "users/login_register.html", {'page': page, 'form': form})
@@ -91,12 +89,11 @@ def delete_user(request):
     
     user = request.user
     
-    print( username, typed)
-    
     if username != typed:
-        #TODO: add error message
+        messages.error(request, "Incorrect username")
         return HttpResponse("Incorrect username")
     user.delete()
+    messages.error(request, "We are sad to loose you " + username)
     return redirect('login')
 
 
@@ -124,6 +121,7 @@ def update_profile(request):
         form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
         if form.is_valid():
             form.save()
+            messages.success(request, "Profile was updated successfully")
             return redirect("profile")
     
     return render(request, "users/profile_form.html", {"form": form})
@@ -158,6 +156,7 @@ def addSkill(request, pk):
             skill = form.save(commit=False)
             skill.profile = request.user
             skill.save()
+            messages.success(request, "New Skill was added")
         return redirect("profile")
     
     context =  {"profile": profile, "form": form}
@@ -169,10 +168,19 @@ def updateSkill(request, pk):
     skill = Skills.objects.get(id=pk)
     form = SkillForm(instance=skill)
     
+    form.fields['name'].widget.attrs['class'] = 'w-full px-2 py-1 bg-gray-200'
+    form.fields['name'].widget.attrs['disabled'] = True
+    
     if request.method == "POST":
-        form = SkillForm(request.POST, instance=skill)
+        request_data = request.POST.copy()
+        request_data['name'] = skill.name
+        
+        form = SkillForm(request_data, instance=skill)
         if form.is_valid():
             form.save()
+            messages.success(request, "Skill was updated")
+        else:
+            messages.error(request, form.errors)
         return redirect("profile")
     
     context =  {"profile": skill.profile, "form": form, "page": "update", "skill": skill}
@@ -185,6 +193,7 @@ def deleteSkill(request, pk):
     
     skill = Skills.objects.get(id=pk)
     skill.delete()
+    messages.error(request, f"Skill {skill.name} was deleted")
     if next:
         return redirect(next)
     return redirect("profile")

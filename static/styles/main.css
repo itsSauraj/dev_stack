@@ -1,3 +1,115 @@
-h1{
-    color: purple;
+/* General container for markdown */
+.markdown-content {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    align-items: left;
+}
+
+.markdown-content {
+    align-items: left;
+    text-align: left;
+}
+
+/* Headings */
+.markdown-content h1 {
+    font-size: 2.5em;
+    margin-bottom: 0.5em;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 0.2em;
+}
+
+.markdown-content h2 {
+    font-size: 2em;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.2em;
+}
+
+.markdown-content h3 {
+    font-size: 1.75em;
+    margin-top: 1.2em;
+    margin-bottom: 0.5em;
+}
+
+/* Paragraphs */
+.markdown-content p {
+    margin-bottom: 1em;
+}
+
+/* Blockquotes */
+.markdown-content blockquote {
+    border-left: 4px solid #ddd;
+    margin: 1.5em 0;
+    padding: 0.5em 1em;
+    color: #555;
+    background: #f9f9f9;
+}
+
+/* Code blocks */
+.markdown-content pre {
+    background: #f4f4f4;
+    padding: 1em;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+.markdown-content code {
+    background: #f4f4f4;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* Lists */
+.markdown-content ul {
+    margin: 1em 0;
+    padding-left: 2em;
+    list-style-type: disc;
+}
+
+.markdown-content ol {
+    margin: 1em 0;
+    padding-left: 2em;
+    list-style-type: decimal;
+}
+
+/* Tables */
+.markdown-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+.markdown-content th, .markdown-content td {
+    border: 1px solid #ddd;
+    padding: 0.5em;
+    text-align: left;
+}
+
+.markdown-content th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+/* Links */
+.markdown-content a {
+    color: #1e90ff;
+    text-decoration: none;
+}
+
+.markdown-content a:hover {
+    text-decoration: underline;
+}
+
+/* Images */
+.markdown-content img {
+    max-width: 300px;
+    height: auto;
+    display: block;
+    margin: 1em 0;
 }

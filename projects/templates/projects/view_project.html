@@ -8,8 +8,9 @@
 
 {% block content %}
 
+<div class="flex">
 
-  <section class="text-gray-600 body-font">
+  <section class="text-gray-600 body-font flex-grow">
     <div class="container mx-auto flex px-5 py-14 items-center justify-center flex-col">
 
       <img class="mb-10 object-center rounded w-[900px] h-[300px] object-cover" alt="loading..." src="{% static project.poster_url %}">
@@ -21,7 +22,7 @@
             <span class="border rounded-[45px] px-3 p-1 bg-[{{ tag.color }}] text-white">{{ tag.name }}</span>
           {% endfor %}
         </div>
-        <p class="mb-8 leading-relaxed">{{ project.description }}</p>
+        <div class="markdown-content">{{ project.description|safe }}</div>
         <div class="flex justify-center">
           {% if project.source_link %}
             <a target="_blank" href="{{ project.source_link }}" class="inline-flex text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg">Source Link</a>
@@ -33,6 +34,9 @@
       </div>
     </div>
   </section>
-
+  <section class="m-w-[300px] m-w-[200px] bg-gray-200">
+    List other projects form the same developer
+  <section>
+</div>
   
 {% endblock %}

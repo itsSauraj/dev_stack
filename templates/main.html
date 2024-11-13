@@ -8,6 +8,7 @@
 
   <link rel="stylesheet" href="{% static 'uikit/styles/uikit.css' %}" />
   <link rel="stylesheet" href="{% static 'styles/app.css' %}" />
+  <link rel="stylesheet" href="{% static 'styles/main.css' %}" />
   <script src="https://cdn.tailwindcss.com"></script>
 
   <script src="https://kit.fontawesome.com/d13c576e44.js" crossorigin="anonymous"></script>
@@ -16,9 +17,20 @@
 <body class="bg-[#f3f5f2]">
   {%  include 'navbar.html' %}
 
+  {% if messages %}
+    <div class="alert">
+        {% for message in messages %}
+        <p{% if message.tags %} class="alert__message {{ message.tags }}"{% endif %}>{{ message }}</p>
+        <button class="alert__close">⨯</button>
+        {% endfor %}
+    </div>
+  {% endif %}
+
+
+
   {% block content %}
   {% endblock %}
   
-  {%  include 'footer.html' %}
+  {%  include 'footer.html' %}  
 </body>
 </html>

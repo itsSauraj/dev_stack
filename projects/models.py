@@ -46,3 +46,20 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+    
+
+class Review(BaseModal):
+    '''
+    Review Modal
+    '''
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='reviews')
+    body = models.TextField()
+    value = models.IntegerField()
+    created_by = models.ForeignKey('users.Profile', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f"{self.value} - {self.project.title}"
+    
+    class Meta:
+        unique_together = [['project', 'created_by']]

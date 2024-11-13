@@ -16,8 +16,32 @@
 <body class="bg-[#f3f5f2]">
   {%  include 'navbar.html' %}
 
+  {% if messages %}
+  {% for message in messages %}
+      <div class="alert {% if message.tags %}alert--{{ message.tags }}{% endif %}" style="border: 0.5px solid rgba(85, 80, 80, 0.377);">
+        <p class="alert__message">{{ message }}</p>
+        <button class="alert__close">⨯</button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
   {% block content %}
   {% endblock %}
-  
+
+  <script>
+    document.querySelectorAll('.alert__close').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        btn.parentElement.style.display = 'none';
+      });
+    });
+
+    document.querySelectorAll('.alert').forEach((alert) => {
+      setTimeout(() => {
+        alert.style.display = 'none';
+      }, 3000);
+    });
+
+  </script>
+
 </body>
 </html>

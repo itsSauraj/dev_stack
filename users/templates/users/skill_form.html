@@ -13,12 +13,29 @@
             <form class="form" method="POST" action="">
                 {% csrf_token %}
 
-                {% for field in form %}
-                <div class="form__field">
-                    <label for="formInput#text"> {{field.label}}</label>
-                    {{field}}
+                <div>
+                    <label for="{{ form.name.id_for_label }}">Name:</label>
+                    {{ form.name }}
+                    {{ form.name.errors }}
                 </div>
-                {% endfor %}
+                
+                <div>
+                    <label for="{{ form.level.id_for_label }}">Level:</label>
+                    {{ form.level }}
+                    {{ form.level.errors }}
+                </div>
+                
+                <div>
+                    <label for="{{ form.bg_color.id_for_label }}">Background Color:</label>
+                    {{ form.bg_color }}
+                    {{ form.bg_color.errors }}
+                </div>
+                
+                <div>
+                    <label for="{{ form.fg_color.id_for_label }}">Foreground Color:</label>
+                    {{ form.fg_color }}
+                    {{ form.fg_color.errors }}
+                </div>
 
                 <div class="flex">
                     <input class="btn btn--sub btn--lg  my-md" type="submit" value="Submit" />

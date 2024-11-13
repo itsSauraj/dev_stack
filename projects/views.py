@@ -1,3 +1,6 @@
+import markdown
+
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
@@ -15,7 +18,7 @@ def homepage(request):
 
 
 def projects(request):
-    projects = Project.objects.all()
+    projects = Project.objects.all()    
     context = {
         "projects": projects,
     }
@@ -24,10 +27,15 @@ def projects(request):
 
 def project(request, pk):
     project = Project.objects.get(id=pk)
+    
+        
+    md = markdown.Markdown(extensions=["fenced_code"])
+    project.description = md.convert(project.description)
+    
     context = {
         "project": project
     }
-    return render(request, f"{app_name}/view_project.html", context)
+    return render(request, f"{app_name}/view_project.html", context=context)
 
 
 @login_required(login_url="/user/login/")
@@ -52,7 +60,8 @@ def create_project(request):
             for tag in tags:
                 tag, created = Tag.objects.get_or_create(name=tag, defaults={'creator': request.user.profile})
                 project.tags.add(tag)
-            
+                
+            messages.success(request, "Project created successfully")
             if next:
                 return redirect(next)
             return redirect("projects")
@@ -92,6 +101,7 @@ def update_project(request, pk):
                 tag, created = Tag.objects.get_or_create(name=tag, defaults={'creator': request.user.profile})
                 project.tags.add(tag)
             
+            messages.success(request, "Project updated successfully")
             if next:
                 return redirect(next)
             return redirect("projects")
@@ -117,6 +127,7 @@ def delete_project(request):
         project = Project.objects.get(id=pk)
         if request.method == "POST":
             project.delete()
+            messages.error(request, "Project deleted successfully")
             if next:
                 return redirect(next)
             return redirect("projects")

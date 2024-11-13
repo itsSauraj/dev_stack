@@ -16,7 +16,9 @@ class ProfileForm(ModelForm):
         super(ProfileForm, self).__init__(*args, **kwargs)
         
         for name, field in self.fields.items():
-            field.widget.attrs.update({'class': 'w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-red-500 focus:bg-transparent focus:ring-2 focus:ring-red-200 text-xl outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out'})
+            field.widget.attrs.update({
+                'class': 'w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-red-500 focus:bg-transparent focus:ring-2 focus:ring-red-200 text-xl outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out'
+            })
 
 
 class SkillForm(ModelForm):
@@ -44,7 +46,9 @@ class SkillForm(ModelForm):
         super(SkillForm, self).__init__(*args, **kwargs)
         
         for name, field in self.fields.items():
-            field.widget.attrs.update({'class': 'w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-red-500 focus:bg-transparent focus:ring-2 focus:ring-red-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out'})
+            field.widget.attrs.update({
+                'class': 'w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-red-500 focus:bg-transparent focus:ring-2 focus:ring-red-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out'
+            })
 
 
 class UserRegistrationForm(UserCreationForm):
