@@ -1,5 +1,7 @@
 import markdown
 
+import django_filters
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
@@ -9,7 +11,8 @@ from .forms import ProjectForm
 from users.views import has_permission
 
 from .models import Project, Tag
-# Create your views here.
+
+from .filters import ProjectFilter
 
 app_name = "projects"
 
@@ -24,16 +27,17 @@ def projects(request):
     }
     return render(request, f"{app_name}/projects.html", context)
 
-
 def project(request, pk):
     project = Project.objects.get(id=pk)
     
+    projects = ProjectFilter({"creator__id": project.creator.id}, queryset=Project.objects.all())
         
     md = markdown.Markdown(extensions=["fenced_code"])
     project.description = md.convert(project.description)
     
     context = {
-        "project": project
+        "project": project,
+        "projects": projects.qs
     }
     return render(request, f"{app_name}/view_project.html", context=context)
 

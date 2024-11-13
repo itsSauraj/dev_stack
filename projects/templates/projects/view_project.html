@@ -1,9 +1,10 @@
 {% extends 'main.html' %}
 
+{% load my_tags %}
 {% load static %}
 
 {% block title %}
-  Home Page
+  {{ project.title }}
 {% endblock %}
 
 {% block content %}
@@ -31,11 +32,40 @@
             <a target="_blank" href="{{ project.demo_link }}" class="ml-4 inline-flex text-gray-700 bg-green-300 border-0 py-2 px-6 focus:outline-none hover:bg-green-200 rounded text-lg">Live link</a>
           {% endif %}
         </div>
+        <hr class="border-2 border-gray-300 my-6">
+        <div class="flex items-center justify-center">
+          <span class="text-gray-700 mr-2">Rating:</span>
+          <div class="flex items-center">
+            {% for i in 5|times %}
+            {% if 4 >= i|add:1 %}
+                <svg class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.84-.197-1.54-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.05 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z"/></svg>
+              {% else %}
+                <svg class="w-6 h-6 text-gray-300" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.84-.197-1.54-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.05 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z"/></svg>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
       </div>
     </div>
   </section>
-  <section class="m-w-[300px] m-w-[200px] bg-gray-200">
-    List other projects form the same developer
+  <section class="w-[300px] bg-gray-200 p-3 flex flex-col gap-3 pl-6" style="box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px;">
+    <h3 class="mb-8 leading-relaxed text-3xl"><i>Other project from {{ project.creator.name }}<i></h3>
+    {% for other_project in projects %}
+      {% if project.id != other_project.id %}
+        <a href="{% url 'project' other_project.id %}">
+          <div class="bg-gray-100 p-6 rounded-lg">
+            <img class="h-40 rounded w-full object-cover object-center mb-6 m-w-[200px]" src="{% static other_project.poster_url %}" alt="content">
+            <h3 class="tracking-widest text-indigo-500 text-xs font-medium title-font">{{ other_project.creator.name }}</h3>
+            <h2 class="text-lg text-gray-900 font-medium title-font mb-4">{{ other_project.title }}</h2>
+          </div>
+        </a>
+      {% endif %}
+    {% endfor %}
+    {% if project.id != other_project.id and projects|length < 2%}
+      <h1>
+        No more projects by {{ project.creator.name }} to show
+      </h1>
+    {% endif %}
   <section>
 </div>
   
