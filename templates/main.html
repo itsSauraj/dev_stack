@@ -31,6 +31,21 @@
   {% block content %}
   {% endblock %}
   
-  {%  include 'footer.html' %}  
+  {%  include 'footer.html' %}
+
+  <script>
+    document.querySelectorAll('.alert__close').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        btn.parentElement.style.display = 'none';
+      });
+    });
+
+    document.querySelectorAll('.alert').forEach((alert) => {
+      setTimeout(() => {
+        alert.style.display = 'none';
+      }, 3000);
+    });
+
+  </script>
 </body>
 </html>

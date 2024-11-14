@@ -1,16 +1,15 @@
 import markdown
-
-import django_filters
+from bs4 import BeautifulSoup
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
-from .forms import ProjectForm
+from .forms import ProjectForm, ReviewForm
 from users.views import has_permission
 
-from .models import Project, Tag
+from .models import Project, Tag, Review
 
 from .filters import ProjectFilter
 
@@ -21,7 +20,15 @@ def homepage(request):
 
 
 def projects(request):
-    projects = Project.objects.all()    
+    projects = Project.objects.all()
+    
+    md = markdown.Markdown(extensions=["fenced_code"])
+        
+    for project in projects:
+        project.description = project.description[:200] + "..."
+        soup = BeautifulSoup(md.convert(project.description), 'html.parser')
+        project.description = soup.get_text()
+    
     context = {
         "projects": projects,
     }
@@ -29,16 +36,44 @@ def projects(request):
 
 def project(request, pk):
     project = Project.objects.get(id=pk)
-    
     projects = ProjectFilter({"creator__id": project.creator.id}, queryset=Project.objects.all())
         
     md = markdown.Markdown(extensions=["fenced_code"])
     project.description = md.convert(project.description)
     
+    form = ReviewForm()
+    
+    reviews_queryset = project.reviews.all()
+    
+    total_rating = sum([review.get_review_stars() for review in reviews_queryset])
+    average_rating = total_rating / len(reviews_queryset) if reviews_queryset else 0
+    
     context = {
         "project": project,
-        "projects": projects.qs
+        "projects": projects.qs,
+        "reviews_from": form,
+        "total_reviews": len(reviews_queryset),
+        "average_rating": average_rating,
     }
+    
+    if request.method == "POST":
+        
+        form_data = request.POST.copy()
+        form_data["project"] = project
+        form_data["project__id"] = project.id
+        
+        form = ReviewForm(form_data)
+        
+        if form.is_valid():
+            review = form.save()
+            try:
+                review.created_by = request.user.profile or None
+            except:
+                pass
+            review.save()
+            messages.success(request, "Review added successfully")
+            return render(request, f"{app_name}/view_project.html", context=context)
+        
     return render(request, f"{app_name}/view_project.html", context=context)
 
 
@@ -47,7 +82,7 @@ def create_project(request):
     form = ProjectForm()
     next = request.GET.get("next")
     if request.method == "POST":
-        
+
         tags_string = request.POST.get("tags")
         tags = tags_string.split(",")
         tags = [tag.strip() for tag in tags if len(tag.strip()) > 0]
@@ -138,3 +173,48 @@ def delete_project(request):
     else:
         return JsonResponse({"error": "Bad Request"}, status=400)   
     return JsonResponse({"error": "Bad Request"}, status=400)
+
+
+
+
+
+
+
+
+
+
+
+def test(request, project_id):
+    project = Project.objects.get(id=project_id)
+    projects = ProjectFilter({"creator__id": project.creator.id}, queryset=Project.objects.all())
+        
+    md = markdown.Markdown(extensions=["fenced_code"])
+    project.description = md.convert(project.description)
+    
+    form = ReviewForm()
+    
+    context = {
+        "project": project,
+        "projects": projects.qs,
+        "reviews_from": form,
+    }
+    
+    if request.method == "POST":
+        
+        form_data = request.POST.copy()
+        form_data["project"] = project
+        form_data["project__id"] = project.id
+        
+        form = ReviewForm(form_data)
+        
+        if form.is_valid():
+            review = form.save()
+            try:
+                review.created_by = request.user.profile or None
+            except:
+                pass
+            review.save()
+            messages.success(request, "Review added successfully")
+            return render(request, f"{app_name}/test.html", context=context)
+        
+    return render(request, f"{app_name}/test.html", context=context)

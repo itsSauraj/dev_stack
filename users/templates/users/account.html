@@ -16,10 +16,10 @@
         <div class="card text-center">
           <div class="card__body dev">
             <div class="flex justify-center">
-              <img class="avatar avatar--lg" src="{% static profile.avatar_url %}" alt="image" />
+              <img class="avatar avatar--lg border-black bg-gray-600" src="{% static profile.avatar_url %}" alt="image" />
             </div>
             <h2 class="dev__name">{{profile.name}}</h2>
-            <p class="dev__title">{{profile.short_intro}}</p>
+            <p class="dev__title">{{profile.short_intro|slice:50}}</p>
 
             <ul class="dev__social">
               {% if profile.social_github %}

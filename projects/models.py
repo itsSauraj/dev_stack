@@ -54,12 +54,18 @@ class Review(BaseModal):
     '''
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='reviews')
-    body = models.TextField()
-    value = models.IntegerField()
+    body = models.TextField(blank=True, null=True)
+    value = models.IntegerField(range(1, 6), default=0, blank=True, null=True)
     created_by = models.ForeignKey('users.Profile', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self) -> str:
-        return f"{self.value} - {self.project.title}"
+        return f"{self.value} - {self.body[:20]} | {self.created_by}"
     
-    class Meta:
-        unique_together = [['project', 'created_by']]
+    def get_review_stars(self):
+        reviews = self.project.reviews.all()
+        sum = 0
+        for review in reviews:
+            sum += review.value
+        if len(reviews) > 0:
+            return round(sum / len(reviews))
+        return 0

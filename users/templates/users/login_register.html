@@ -40,11 +40,11 @@
 
                     {% endfor %}
 
-                    <div class="auth__actions">
-                        <input class="btn btn--sub btn--lg" type="submit" value="Sign  In" />
+                    <div class="auth__actions flex flex-col justify-center text-center">
+                        <input class="btn btn--sub btn--lg bg-black" type="submit" value="Sign  In" />
                     </div>
                 </form>
-                <div class="auth__alternative">
+                <div class="auth__alternative flex flex-col justify-center text-center">
                     <p>Already have an Account?</p>
                     <a href="{% url 'login' %}">Log In</a>
                 </div>
@@ -67,12 +67,12 @@
                         <small>{{ form.password.help_text }}</small>
                     </div>
 
-                    <div class="auth__actions">
-                        <input class="btn btn--sub btn--lg" type="submit" value="Log In" />
+                    <div class="auth__actions flex flex-col justify-center text-center">
+                        <input class="btn btn--sub btn--lg bg-black" type="submit" value="Log In" />
                     </div>
                 </form>
 
-                <div class="auth__alternative">
+                <div class="auth__alternative flex flex-col justify-center text-center">
                     <p>Don’t have an Account?</p>
                     <a href="{% url 'register' %}">Sign Up</a>
                 </div>

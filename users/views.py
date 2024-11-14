@@ -1,3 +1,6 @@
+import markdown
+from bs4 import BeautifulSoup
+
 from django.shortcuts import render, redirect, HttpResponse
 
 from django.contrib import messages
@@ -57,7 +60,6 @@ def has_permission(profile, project_id):
     return False
         
 
-
 def register_user(request):
     
     if request.user.is_authenticated:
@@ -109,6 +111,13 @@ def profile(request):
         return redirect("developer-view", pk=pk)
     
     projects = profile.project_set.all()
+    
+    md = markdown.Markdown()
+    
+    for project in projects:
+        project.description = project.description[:200] + "..."
+        soup = BeautifulSoup(md.convert(project.description), 'html.parser')
+        project.description = soup.get_text()
     
     context = {"profile" : profile , "projects": projects}
     return render(request, "users/account.html", context)

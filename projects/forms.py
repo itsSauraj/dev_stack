@@ -1,7 +1,7 @@
-from django.forms import ModelForm, CheckboxSelectMultiple, TextInput, Textarea
+from django.forms import ModelForm, TextInput, Textarea, Select
 
 
-from .models import Project
+from .models import Project, Review
 
 
 class ProjectForm(ModelForm):
@@ -33,4 +33,28 @@ class ProjectForm(ModelForm):
         
         for name, field in self.fields.items():
             field.widget.attrs.update({'class': 'input input--text'})
+            
 
+
+class ReviewForm(ModelForm):
+    global NUMBER_CHOICES
+    NUMBER_CHOICES = [(i, str(i)) for i in range(1, 6)]
+    
+    class Meta:
+        model = Review
+        fields = ['body', 'value', 'project']
+        
+        widgets = {
+            'body': Textarea(
+              attrs={
+                'placeholder': 'Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of class....',
+                'rows': 2
+              }), 
+            'value': Select(choices=NUMBER_CHOICES)
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ReviewForm, self).__init__(*args, **kwargs)
+        
+        for name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'input input--text'})

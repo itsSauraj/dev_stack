@@ -1,0 +1,120 @@
+{% load static %}
+
+<script>
+
+  function create_review_node(review, new_reviews) {
+
+    const profile_url = "{{ request.host }}/user/profile/v/" + review.created_by
+
+    const profile_url_html = review.created_by == null ? 
+      `
+        <span class="text-gray-500 font-bold text-left">${review.created_by_name}</span>
+      `
+      : 
+      `
+        <a href='${profile_url}' class="text-gray-500 font-bold text-left hover:underline">${review.created_by_name}</a>
+      `
+
+    comment_box = `
+      <div class="flex justify-between">
+        <div class="flex items-center justify-center gap-3">
+          <img class="avatar avatar--sm border-gray-800" src="${review.creator_avatar}">
+          <div class="text-left">
+            ${profile_url_html}
+            <p class="text-lg text-left">${review.days_since_created} days ago</p>
+          </div>
+        </div>
+        <span class="py-2 px-4 border-2 border-[#f59e0b] text-[#f59e0b] rounded-[20px] h-[35px] flex items-center">
+          <i class="fa-solid fa-star"></i>&nbsp;&nbsp; ${review.value}
+        </span>
+      </div>
+      <p class="text-black text-xl text-left">
+        ${review.body}
+      </p>
+      `;
+
+    const reviewElement = document.createElement("li");
+    reviewElement.setAttribute("class", "flex flex-col gap-4 w-[350px] p-8 rounded-lg flex-grow");
+    reviewElement.style.boxShadow = "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px";
+    reviewElement.innerHTML = comment_box;
+    new_reviews.prepend(reviewElement);
+  }
+
+  function get_review(page = 1) {
+    fetch(`/api/reviews/{{ project.id }}?page=${page}`)
+      .then((response) => response.json())
+      .then((data) => {
+        const reviewsList = document.getElementById("reviews-list");
+        const new_reviews = document.createElement("ul");
+        new_reviews.setAttribute("class", "flex flex-wrap justify-center gap-4");
+        new_reviews.setAttribute("id", "reviews_container");
+
+        if (page === 1){
+          reviewsList.innerHTML = "";
+        }
+        if (data.length === 0) {
+          reviewsList.innerHTML = "<li>No reviews yet for this product.</li>";
+        } else {
+          const reviews = data.reviews
+          reviews.forEach((review) => {
+            create_review_node(review, new_reviews);
+          });
+        }
+        reviewsList.appendChild(new_reviews);
+        if (page === 1) {
+          const page_element = document.createElement("span");
+          page_element.setAttribute("id", "page");
+          page_element.innerHTML = "1";
+          reviewsList.appendChild(page_element);
+        }
+        const heading_elemetn = document.createElement("h2");
+        heading_elemetn.setAttribute("class", "text-5xl font-medium my-6 mt-[2 0px]");
+        heading_elemetn.innerHTML = "Reviews";
+        reviewsList.insertBefore(heading_elemetn, reviewsList.firstChild);
+      })
+      .catch((error) => console.error("Error fetching reviews:", error));
+  }
+
+  function load_next_page() {
+    const page = document.getElementById("page");
+    load_current = +page.innerText + 1;
+    get_review(load_current);
+    document.getElementById("page").innerText = load_current;
+  }
+
+  function post_review(event) {
+    event.preventDefault();
+
+    const review = {
+      value: document.getElementById("value").value,
+      body: document.getElementById("formInput#text").value,
+    };
+
+    fetch(`/api/reviews/{{ project.id }}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: JSON.stringify(review),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        data.days_since_created = "just now";
+        const new_reviews = document.getElementById("reviews_container");
+        console.log(new_reviews);
+        create_review_node(data, new_reviews);
+        document.getElementById("value").value = "1";
+        document.getElementById("formInput#text").value = "";
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
+
+
+  document.addEventListener("DOMContentLoaded", () => {
+    get_review();
+  });
+
+</script>

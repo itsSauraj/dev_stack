@@ -1,72 +1,124 @@
 {% extends 'main.html' %}
 
+
 {% load my_tags %}
 {% load static %}
 
 {% block title %}
-  {{ project.title }}
+{{ project.title }}
 {% endblock %}
 
 {% block content %}
+{% include './js/post_functions.html' %}
 
 <div class="flex">
 
   <section class="text-gray-600 body-font flex-grow">
     <div class="container mx-auto flex px-5 py-14 items-center justify-center flex-col">
 
-      <img class="mb-10 object-center rounded w-[900px] h-[300px] object-cover" alt="loading..." src="{% static project.poster_url %}">
+      <img class="mb-10 object-center rounded w-[900px] h-[300px] object-cover" alt="loading..."
+        src="{% static project.poster_url %}">
 
       <div class="text-center lg:w-2/3 w-full">
         <h1 class="title-font sm:text-4xl text-3xl mb-4 font-medium text-gray-900">{{ project.title }}</h1>
         <div class="w-full m-2">
           {% for tag in project.tags.all %}
-            <span class="border rounded-[45px] px-3 p-1 bg-[{{ tag.color }}] text-white">{{ tag.name }}</span>
+          <span class="border rounded-[45px] px-3 p-1 bg-[{{ tag.color }}] text-white">{{ tag.name }}</span>
           {% endfor %}
         </div>
         <div class="markdown-content">{{ project.description|safe }}</div>
-        <div class="flex justify-center">
+        <div class="flex justify-center gap-4">
           {% if project.source_link %}
-            <a target="_blank" href="{{ project.source_link }}" class="inline-flex text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg">Source Link</a>
+          <a target="_blank" href="{{ project.source_link }}"
+            class="inline-flex bg-black text-white hover:opacity-50 px-6 py-2 rounded-lg transition-all duration-200">Source
+            Link</a>
           {% endif %}
           {% if project.demo_link %}
-            <a target="_blank" href="{{ project.demo_link }}" class="ml-4 inline-flex text-gray-700 bg-green-300 border-0 py-2 px-6 focus:outline-none hover:bg-green-200 rounded text-lg">Live link</a>
+          <a target="_blank" href="{{ project.demo_link }}"
+            class="inline-flex bg-black text-white hover:opacity-50 px-6 py-2 rounded-lg transition-all duration-200">Live
+            link</a>
           {% endif %}
         </div>
         <hr class="border-2 border-gray-300 my-6">
-        <div class="flex items-center justify-center">
-          <span class="text-gray-700 mr-2">Rating:</span>
-          <div class="flex items-center">
-            {% for i in 5|times %}
-            {% if 4 >= i|add:1 %}
-                <svg class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.84-.197-1.54-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.05 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z"/></svg>
+        <div class="flex items-center justify-center flex-col">
+          <div class="flex items-center justify-center">
+            <span class="text-gray-700 mr-2">Rating:</span>
+            <div class="flex items-center">
+              {% for i in 5|times %}
+              {% if average_rating >= i|add:1 %}
+              <svg class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.84-.197-1.54-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.05 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
+              </svg>
               {% else %}
-                <svg class="w-6 h-6 text-gray-300" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.84-.197-1.54-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.05 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z"/></svg>
+              <svg class="w-6 h-6 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.84-.197-1.54-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.05 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
+              </svg>
               {% endif %}
-            {% endfor %}
+              {% endfor %}
+            </div>
+            <span class="ml-6">Total reviews: {{ total_reviews }}</span>
+          </div>
+          <div class="flex flex-col">
+            <h3 class="text-3xl font-medium p-3 mt-[2 0px]">Write a review</h3>
+            <form method="POST" class="flex flex-col justify-center items-center gap-3" onsubmit="post_review(event)">
+              {% csrf_token %}
+              <div class="flex justify-center items-center gap-3">
+                <div class="flex-grow">
+                  <input class="p-5 text-xl bg-white border-2 border-gray-400 rounded-lg transition-all duration-300" id="formInput#text" type="text" name="body"
+                    placeholder="Write your review.." />
+                </div>
+                <div class="">
+                  <select name="value" id="value" class="p-5 text-xl bg-white border-2 border-gray-400 rounded-lg transition-all duration-300">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit"
+                class="inline-flex text-white bg-black border-0 py-2 px-6 focus:outline-none hover:opacity-75 rounded-lg text-lg w-[max-content]">Submit</button>
+            </form>
+
+            <div class="flex justify-center items-center flex-col">
+              <div id="reviews-list">
+              </div>
+              <button onclick="load_next_page()" class="text-lg py-3 px-2 text-black underline hover:opacity-50 mt-[30px]">View More</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </section>
-  <section class="w-[300px] bg-gray-200 p-3 flex flex-col gap-3 pl-6" style="box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px;">
+
+
+
+
+
+
+  <section class="w-[300px] bg-gray-200 p-3 flex flex-col gap-3 pl-6"
+    style="box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px;">
     <h3 class="mb-8 leading-relaxed text-3xl"><i>Other project from {{ project.creator.name }}<i></h3>
     {% for other_project in projects %}
-      {% if project.id != other_project.id %}
-        <a href="{% url 'project' other_project.id %}">
-          <div class="bg-gray-100 p-6 rounded-lg">
-            <img class="h-40 rounded w-full object-cover object-center mb-6 m-w-[200px]" src="{% static other_project.poster_url %}" alt="content">
-            <h3 class="tracking-widest text-indigo-500 text-xs font-medium title-font">{{ other_project.creator.name }}</h3>
-            <h2 class="text-lg text-gray-900 font-medium title-font mb-4">{{ other_project.title }}</h2>
-          </div>
-        </a>
-      {% endif %}
-    {% endfor %}
-    {% if project.id != other_project.id and projects|length < 2%}
-      <h1>
-        No more projects by {{ project.creator.name }} to show
-      </h1>
+    {% if project.id != other_project.id %}
+    <a href="{% url 'project' other_project.id %}" class="flex-grow">
+      <div class="bg-gray-100 p-6 rounded-lg">
+        <img class="h-40 rounded w-full object-cover object-center mb-6 w-[250px] "
+          src="{% static other_project.poster_url %}" alt="content">
+        <h3 class="tracking-widest text-indigo-500 text-xs font-medium title-font w-[250px]">{{ other_project.creator.name }}</h3>
+        <h2 class="text-lg text-gray-900 font-medium title-font mb-4">{{ other_project.title }}</h2>
+      </div>
+    </a>
     {% endif %}
-  <section>
+    {% endfor %}
+    {% if project.id != other_project.id and projects|length < 2%} <h1>
+      No more projects by {{ project.creator.name }} to show
+      </h1>
+      {% endif %}
+      <section>
 </div>
-  
+
 {% endblock %}
