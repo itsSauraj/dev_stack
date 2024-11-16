@@ -11,7 +11,7 @@ urlpatterns = [
   
   path("profile/", users.views.profile, name="profile"),
   path("profile/update", users.views.update_profile, name="update-profile"),
-  path("profile/v/<str:pk>", users.views.view_profile, name="developer-view"),
+  path("profile/<str:pk>", users.views.view_profile, name="developer-view"),
   path("developers", users.views.get_developers, name="developers"),
   
   path("skills/<str:pk>", users.views.addSkill, name="add-skill"),

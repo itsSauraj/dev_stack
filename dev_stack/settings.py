@@ -30,7 +30,7 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-INSTALLED_APPS = [
+INSTALLED_APPS = [    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     
     'rest_framework',
     'django_filters',
+    
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -79,7 +81,14 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'dev_stack.asgi.application'
 WSGI_APPLICATION = 'dev_stack.wsgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer', # Use InMemoryChannelLayer for development
+    },
+}
 
 
 # Database
@@ -129,6 +138,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/images/'
+
+AUTH_USER_MODEL = 'users.User'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static'

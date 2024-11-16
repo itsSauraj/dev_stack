@@ -1,6 +1,7 @@
 {% load static %}
 
 <script>
+  let total_reviews = {{ total_reviews }}
 
   function create_review_node(review, new_reviews) {
 
@@ -32,12 +33,20 @@
         ${review.body}
       </p>
       `;
-
+    const reviewList = document.getElementById("reviews-list");
     const reviewElement = document.createElement("li");
+
     reviewElement.setAttribute("class", "flex flex-col gap-4 w-[350px] p-8 rounded-lg flex-grow");
     reviewElement.style.boxShadow = "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px";
     reviewElement.innerHTML = comment_box;
-    new_reviews.prepend(reviewElement);
+    if (total_reviews == 0){
+      reviewList.innerHTML = "";
+    }
+    try {
+      new_reviews.prepend(reviewElement);
+    } catch (error) {
+      new_reviews.appendChild(reviewElement);
+    }
   }
 
   function get_review(page = 1) {
@@ -52,8 +61,8 @@
         if (page === 1){
           reviewsList.innerHTML = "";
         }
-        if (data.length === 0) {
-          reviewsList.innerHTML = "<li>No reviews yet for this product.</li>";
+        if ( total_reviews === 0) {
+          reviewsList.innerHTML = "<span id='no-review-msg'>No reviews yet for this project</span>";
         } else {
           const reviews = data.reviews
           reviews.forEach((review) => {
@@ -101,9 +110,15 @@
     })
       .then((response) => response.json())
       .then((data) => {
+        try {
+          document.getElementById("no-review-msg").remove();
+        } catch (error) {}
+        total_reviews = total_reviews + 1;
+        const total_review_text = "Total reviews: " + total_reviews;
+        document.getElementById("total-reviews").innerHTML = total_review_text;
+
         data.days_since_created = "just now";
         const new_reviews = document.getElementById("reviews_container");
-        console.log(new_reviews);
         create_review_node(data, new_reviews);
         document.getElementById("value").value = "1";
         document.getElementById("formInput#text").value = "";

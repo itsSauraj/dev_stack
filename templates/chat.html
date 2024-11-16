@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load my_tags %}
+
+{% block title %}
+Chat
+{% endblock %}
+
+{% block content %}
+
+{% if no_chat %}
+    <div>No chat opened</div>
+{% else %}
+
+    <div>
+        <h1 id="connection-status" class="bg-black w-full p-4 text-3xl text-white">Connection:</h1>
+
+        <form class="text-2xl p-4 flex flex-col gap-4 items-center justify-center bg-gray-300" id="chat-box">
+            <input type="text" name="message" value="" class="p-3 text-xl border-1 border-black rounded-lg transition-all duration-300 onfocus:border-black"/>
+            <button type="submit" class="bg-[#22c55e] text-xl py-2 px-3 border rounded-lg text-white">Send</button>
+        </form>
+
+    </div>
+
+
+    <script type="text/javascript">
+
+        const statusElement = document.getElementById('connection-status')
+        statusElement.innerHTML = 'Connecting...'
+        let url = `ws:///${window.location.host}/ws/chat-server/?id={{ chat_room_id }}`;
+
+        let chatSocket = new WebSocket(url);
+
+        chatSocket.onopen = (event) => {
+            statusElement.innerHTML = 'Connected to the chat server';
+        }
+
+        chatSocket.onmessage = (event) => {
+            let data = JSON.parse(event.data);
+            console.log(data);
+
+            let messageElement = document.createElement('div');
+            messageElement.innerHTML = data.message;
+            document.body.appendChild(messageElement);
+        }
+
+        chatSocket.onclose = (event) => {
+            statusElement.innerHTML = 'Disconnected from the chat server';
+        }
+
+        chatSocket.onerror = (event) => {
+            statusElement.innerHTML = 'Error connecting to the chat server';
+        }
+        
+        chatBoxFrom = document.getElementById('chat-box');
+
+        
+        chatBoxFrom.addEventListener('submit', function(event){
+            event.preventDefault();
+            sendMessage(event);
+        });
+        const sendMessage = (event) => {
+            let message = event.target.message.value;
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'sender_id': `{{ user.profile.id }}`,
+                'sent_at': new Date().toISOString(),
+            }));
+            chatBoxFrom.reset();
+        }
+        
+    </script>
+
+{% endif %}
+{% endblock %}

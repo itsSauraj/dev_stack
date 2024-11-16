@@ -2,8 +2,8 @@ import django.forms as forms
 from django.forms import ModelForm
 from django.contrib.auth.forms import UserCreationForm
 
-from django.contrib.auth.models import User
-from .models import Profile, Skills
+# from django.contrib.auth.models import User
+from .models import Profile, Skills, User
 
 class ProfileForm(ModelForm):
     class Meta:

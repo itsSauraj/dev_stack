@@ -23,7 +23,7 @@
         <h1 class="title-font sm:text-4xl text-3xl mb-4 font-medium text-gray-900">{{ project.title }}</h1>
         <div class="w-full m-2">
           {% for tag in project.tags.all %}
-          <span class="border rounded-[45px] px-3 p-1 bg-[{{ tag.color }}] text-white">{{ tag.name }}</span>
+          <span class="border rounded-[45px] px-3 p-1 border border-1 border-blue-800 bg-blue-200 text-blue-800">{{ tag.name }}</span>
           {% endfor %}
         </div>
         <div class="markdown-content">{{ project.description|safe }}</div>
@@ -58,7 +58,7 @@
               {% endif %}
               {% endfor %}
             </div>
-            <span class="ml-6">Total reviews: {{ total_reviews }}</span>
+            <span class="ml-6" id="total-reviews">Total reviews: {{ total_reviews }}</span>
           </div>
           <div class="flex flex-col">
             <h3 class="text-3xl font-medium p-3 mt-[2 0px]">Write a review</h3>
@@ -82,11 +82,12 @@
               <button type="submit"
                 class="inline-flex text-white bg-black border-0 py-2 px-6 focus:outline-none hover:opacity-75 rounded-lg text-lg w-[max-content]">Submit</button>
             </form>
-
             <div class="flex justify-center items-center flex-col">
               <div id="reviews-list">
               </div>
-              <button onclick="load_next_page()" class="text-lg py-3 px-2 text-black underline hover:opacity-50 mt-[30px]">View More</button>
+              <button onclick="load_next_page()" class="text-lg py-3 px-2 text-black underline hover:opacity-50 mt-[30px] {% if total_reviews == 0 %}hidden{% endif %}" id="view-more-reviews">
+                View More
+              </button>            
             </div>
           </div>
         </div>
@@ -99,7 +100,7 @@
 
 
 
-  <section class="w-[300px] bg-gray-200 p-3 flex flex-col gap-3 pl-6"
+  <section class="w-[300px] bg-gray-200 p-3 sm:hidden md:flex lg:flex xl:flex flex-col gap-3 pl-6 "
     style="box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px;">
     <h3 class="mb-8 leading-relaxed text-3xl"><i>Other project from {{ project.creator.name }}<i></h3>
     {% for other_project in projects %}

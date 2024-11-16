@@ -1,12 +1,15 @@
 import markdown
+import hashlib
 from bs4 import BeautifulSoup
 
-from django.shortcuts import render, redirect, HttpResponse
+from django.shortcuts import render, redirect
+from django.http import StreamingHttpResponse
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+
+from users.models import User, ChannelRecord, Message
 
 from projects.models import Project
 
@@ -58,6 +61,9 @@ def has_permission(profile, project_id):
     if profile.user == project.creator.user:
         return True
     return False
+
+def get_user_profile_by_id(id):
+    return Profile.objects.get(id=id)
         
 
 def register_user(request):
@@ -93,24 +99,15 @@ def delete_user(request):
     
     if username != typed:
         messages.error(request, "Incorrect username")
-        return HttpResponse("Incorrect username")
+        return StreamingHttpResponse("Incorrect username")
     user.delete()
     messages.error(request, "We are sad to loose you " + username)
     return redirect('login')
 
 
 @login_required(login_url='login')
-def profile(request):
-    
-    pk = request.user.profile.id
-    
-    profile = Profile.objects.get(id=pk)
-    user = profile.user
-    
-    if user != request.user:
-        return redirect("developer-view", pk=pk)
-    
-    projects = profile.project_set.all()
+def profile(request):    
+    projects = request.user.profile.project_set.all()
     
     md = markdown.Markdown()
     
@@ -119,7 +116,7 @@ def profile(request):
         soup = BeautifulSoup(md.convert(project.description), 'html.parser')
         project.description = soup.get_text()
     
-    context = {"profile" : profile , "projects": projects}
+    context = {"profile" : request.user.profile , "projects": projects}
     return render(request, "users/account.html", context)
 
 @login_required(login_url='login')
@@ -146,11 +143,9 @@ def get_developers(request):
 def view_profile(request, pk):
     
     profile = Profile.objects.get(id=pk)
-    user = profile.user
-    
     projects = profile.project_set.all()
     
-    context = { "user": user,"profile" : profile , "projects": projects, "view": True}
+    context = {"profile" : profile, "projects": projects, "view": True}
     return render(request, "users/account.html", context)
 
 @login_required(login_url='login')
@@ -206,3 +201,36 @@ def deleteSkill(request, pk):
     if next:
         return redirect(next)
     return redirect("profile")
+
+####################################################################################################################
+
+class Channel:
+
+    def ChannelIDgenerator(user1, user2):
+        correct_order = sorted([user1, user2])
+        #TODO: restart here
+
+
+
+    def create_channel_record(user1, user2):
+        channel_record = ChannelRecord.objects.create()
+        channel_record.users.add(user1, user2)
+        channel_record.save()
+        return channel_record
+
+    @staticmethod
+    def chat(request, channel_id):
+        
+        user1 = request.user
+        user2 = get_user_profile_by_id(channel_id)
+        
+        chat_room_id = channel_id
+        
+        if not chat_room_id:
+            return render(request, "chat.html", context={ 'no_chat': True })
+        
+        context = {
+            "chat_room_id": chat_room_id,
+        }
+        
+        return render(request, "chat.html", context=context)

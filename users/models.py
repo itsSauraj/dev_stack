@@ -1,6 +1,7 @@
-from django.db import models
 import uuid
-from django.contrib.auth.models import User
+from django.db import models
+# from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 
 
 class BaseModel(models.Model):
@@ -10,6 +11,13 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+        
+class User(AbstractUser, BaseModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    testing = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.username)
 
     
 class Skills(BaseModel):
@@ -50,3 +58,23 @@ class Profile(BaseModel):
             return self.avatar.url
         else:
             return "avatars/default.png"
+        
+
+class ChannelRecord(BaseModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    channel_id = models.CharField(max_length=100)
+    channel_name = models.CharField(max_length=100)
+    channel_members = models.ManyToManyField(User)
+    
+    def __str__(self):
+        return f"{self.channel_name}"
+    
+
+class Message(BaseModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    channel = models.ForeignKey(ChannelRecord, on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField()
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.message[:20]}"
