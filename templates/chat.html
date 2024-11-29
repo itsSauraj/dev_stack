@@ -41,9 +41,18 @@ Chat
             <div class="flex flex-grow w-full h-[74svh] justify-center items-end">
                 <div id="chat-screen" class="p-4 grid grid-cols-1 w-full overflow-y-scroll justify-bottom">
                     {% for message in chat_messages %}
-                    <div class="p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start {% if message.sender.id == request.user.id %}text-end bg-[#8b5cf6] justify-self-end{% endif %}" style="height: fit-content;">
+                    <div class="p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start {% if message.sender.id == request.user.id %}text-end bg-[#8b5cf6] justify-self-end{% endif %}" style="height: fit-content;" data-message-id="{{ message.id }}">
                         <p class="text-2xl text-white">{{ message.message }}</p>
-                        <p class="text-sm text-gray-300">{{ message.sent_at|date:"H:i" }}</p>
+                        <div class="flex justify-between">
+                            <p class="text-sm text-gray-300">{{ message.sent_at|date:"H:i" }}</p>
+                            <span class="text-sm">
+                                {% if not message.is_read %}
+                                    <i class="fa-regular fa-circle text-green-300"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-circle text-gray-200"></i>
+                                {% endif %}
+                            </span>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
@@ -60,14 +69,19 @@ Chat
 
         
         const chatScreen = document.getElementById('chat-screen')
-        chatScreen.scrollTop = chatScreen.scrollHeight;
+        const lastReadMessage = chatScreen.querySelector('[data-message-id="{{ last_read_message_id }}"]');
+        if (lastReadMessage) {
+            lastReadMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            chatScreen.scrollTop = chatScreen.scrollHeight;
+        }
         let url = `ws:///${window.location.host}/ws/chat-server/?id={{ chat_room_id }}`;
 
         let chatSocket = new WebSocket(url);
 
-        // chatSocket.onopen = (event) => {
-        //     statusElement.innerHTML = 'Connected to the chat server';
-        // }
+        chatSocket.onopen = (event) => {
+            console.log('Connected to the chat server');
+        }
 
         chatSocket.onmessage = (event) => {
             let data = JSON.parse(event.data);
@@ -75,21 +89,44 @@ Chat
             if (data.type === 'connection') {
                 let messageElement = document.createElement('span');
                 messageElement.classList.add('p-4', 'my-2', 'justify-self-center', 'text-center', 'text-sm');
-                messageElement.innerHTML = 'Connected';
+                messageElement.textContent = 'Connected';
                 chatScreen.appendChild(messageElement);
                 return;
             }
 
-            const message = `
-                <p class="text-2xl text-white">${data.message}</p>
-                <p class="text-sm text-gray-300">${new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                `;
+            if (data.type === 'message') {
+                const message = `
+                    <p class="text-2xl text-white">${data.message}</p>
+                    <div class="flex justify-between">
+                        <p class="text-sm text-gray-300">${new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        <span class="text-sm">
+                            ${data.is_read ? '<i class="fa-solid fa-circle text-gray-200"></i>' : '<i class="fa-regular fa-circle text-green-300"></i>'}
+                        </span>
+                    </div>
+                    `;
+    
+                let messageElement = document.createElement('div');
+                messageElement.className = `p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start ${data.sender == '{{request.user.id}}' ? 'text-end bg-[#8b5cf6] justify-self-end': '' }`;
+                messageElement.dataset.messageId = data.id;
+                messageElement.innerHTML = message;
+                chatScreen.appendChild(messageElement);
+    
+                if (messageElement.getBoundingClientRect().top < window.innerHeight) {
+                    chatSocket.send(JSON.stringify({
+                        "action": "mark-as-read",
+                        "message_id": data.id,
+                        "readers_id": "{{ request.user.id }}"
+                    }));
+                }
+            }
 
-            let messageElement = document.createElement('div');
-            messageElement.setAttribute('class', `p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start ${data.sender == '{{request.user.id}}' ? 'text-end bg-[#8b5cf6] justify-self-end': '' }`);
-            messageElement.style.height = 'fit-content';
-            messageElement.innerHTML = message;
-            chatScreen.appendChild(messageElement);
+            if (data.type === "message-read"){
+                const messageElement = chatScreen.querySelector(`[data-message-id="${data.message_id}"]`);
+                if (messageElement) {
+                    messageElement.querySelector('span').innerHTML = '<i class="fa-solid fa-circle text-gray-200"></i>';
+                }
+            }
+
         }
 
         chatSocket.onclose = (event) => {
@@ -116,9 +153,11 @@ Chat
         const sendMessage = (event) => {
             let message = event.target.message.value;
             chatSocket.send(JSON.stringify({
+                'action': 'send-message',
                 'message': message,
-                'sender_id': `{{ user.profile.id }}`,
                 'sent_at': new Date().toISOString(),
+                'sender': `{{ user.profile.id }}`,
+                'receiver': `{{ opened_chat.id }}`,
             }));
             chatBoxFrom.reset();
         }

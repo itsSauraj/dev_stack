@@ -78,9 +78,15 @@ class Message(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # channel = models.ForeignKey(ChannelRecord, on_delete=models.CASCADE)
     channel = models.TextField(default=None, null=True)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sender")
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="receiver")
     sent_at = models.DateTimeField(default=None, null=True)
     message = models.TextField()
+    is_read = models.BooleanField(default=False)
     
     def __str__(self):
         return f"{self.sender.username} - {self.message[:20]}"
+
+    def mark_as_read(self):
+        self.is_read = True
+        self.save()

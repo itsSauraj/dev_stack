@@ -62,6 +62,9 @@ def has_permission(profile, project_id):
         return True
     return False
 
+def get_user_by_id(id):
+    return User.objects.get(id=id)
+
 def get_user_profile_by_id(id):
     return Profile.objects.get(id=id)
         
@@ -228,6 +231,13 @@ class Channel:
     def get_messages(channel_id):
         messages = Message.objects.filter(channel=channel_id)
         return messages
+    
+    @staticmethod
+    def get_last_read_message_id(user, channel_id):
+        last_read_message = Message.objects.filter(channel=channel_id, receiver=user, is_read=True).last()
+        if last_read_message:
+            return last_read_message.id
+        return None
 
     @staticmethod
     @login_required(login_url='login')
@@ -235,6 +245,7 @@ class Channel:
         
         channel_id = Channel.ChannelIDgenerator(user1=request.user.profile.id, user2=profile_id)
         chat_messages = Channel.get_messages(channel_id).filter(channel=channel_id)
+        
         
         channel_record = ChannelRecord.objects.filter(channel_id=channel_id)
         
@@ -252,11 +263,14 @@ class Channel:
             } for chat in request.user.channelrecord_set.all()
         ]
         
+        last_read_message_id = None
+        
         context = {
             "chat_room_id": channel_id,
             "chat_messages": chat_messages,
             "opened_chat": opened_chat,
             "all_chats": filtered_chats,
+            "last_read_message_id": last_read_message_id
         }
         
         return render(request, "chat.html", context=context)
