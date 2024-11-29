@@ -67,14 +67,20 @@ class ChannelRecord(BaseModel):
     channel_members = models.ManyToManyField(User)
     
     def __str__(self):
-        return f"{self.channel_name}"
+        return f"{self.channel_name or self.channel_id}"
+    
+    @classmethod
+    def get_user_channels(cls, user):
+        return cls.objects.filter(channel_members=user)
     
 
 class Message(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    channel = models.ForeignKey(ChannelRecord, on_delete=models.CASCADE)
+    # channel = models.ForeignKey(ChannelRecord, on_delete=models.CASCADE)
+    channel = models.TextField(default=None, null=True)
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    sent_at = models.DateTimeField(default=None, null=True)
     message = models.TextField()
     
     def __str__(self):
-        return f"{self.user.username} - {self.message[:20]}"
+        return f"{self.sender.username} - {self.message[:20]}"

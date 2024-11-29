@@ -4,7 +4,6 @@ import logging
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 
-
 log = logging.getLogger(__name__)
 
 
@@ -23,7 +22,6 @@ class ChatConsumer(WebsocketConsumer):
         
         self.accept()
 
-
         self.send(text_data=json.dumps({
             'type': 'connection',
             'message': 'You are connected to the chat room',
@@ -34,12 +32,21 @@ class ChatConsumer(WebsocketConsumer):
     def receive(self, text_data=None, bytes_data=None):
         
         from users.views import get_user_profile_by_id
+        from users.models import ChannelRecord, Message
         
         text_data_json = json.loads(text_data)
         
         sender = get_user_profile_by_id(text_data_json['sender_id'])
         message = text_data_json['message']
         sent_at = text_data_json['sent_at']
+        
+        
+        Message.objects.create(
+            sender=sender.user,
+            message=message,
+            sent_at=sent_at,
+            channel=self.chat_group_id
+        )        
         
         async_to_sync(self.channel_layer.group_send)(
             self.chat_group_id,

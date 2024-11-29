@@ -12,46 +12,99 @@ Chat
 {% if no_chat %}
     <div>No chat opened</div>
 {% else %}
-
-    <div>
-        <h1 id="connection-status" class="bg-black w-full p-4 text-3xl text-white">Connection:</h1>
-
-        <form class="text-2xl p-4 flex flex-col gap-4 items-center justify-center bg-gray-300" id="chat-box">
-            <input type="text" name="message" value="" class="p-3 text-xl border-1 border-black rounded-lg transition-all duration-300 onfocus:border-black"/>
-            <button type="submit" class="bg-[#22c55e] text-xl py-2 px-3 border rounded-lg text-white">Send</button>
-        </form>
-
+    <div class="flex h-[92svh] overflow-y-hidden">  
+        <div class="bg-gray-200 w-[25%] h-[100%] overflow-y-scroll"> 
+            <div class="p-3 bg-gray-300">
+                <h3 class="text-center text-2xl text-uppercase">Chats</h3>
+            </div>
+            <div class="p-3 flex flex-col gap-1">
+                {% for chat in all_chats %}
+                    <a class="h-[8svh] flex bg-gray-200 justify-start items-center gap-4 p-2 border-black
+                    {% if chat.members.0.profile.id == opened_chat.id %} bg-gray-300 {% endif %}
+                    hover:bg-gray-400 transition-all duration-300 rounded-lg"
+                    style="height: fit-content;"
+                    href="/chat/{{ chat.members.0.profile.id }}">
+                    <img src="{% static chat.members.0.profile.avatar_url %}" alt="No Avatar" class="w-[45px] h-[45px] rounded-full border-2 border-black">
+                    <h1 class="text-2xl text-center">{{ chat.members.0.profile.name|default:chat.members.0.username }}</h1>
+                </a>
+                <hr class="border-1 border-black"/> 
+                {% endfor %}
+            </div>
+        </div>
+        <div class="flex flex-col w-full">
+            <a class="h-[8svh] flex bg-gray-200 justify-start items-center gap-4 p-2"
+                href="{% url 'developer-view' opened_chat.id %}"
+            >
+                <img src="{% static opened_chat.avatar_url %}" alt="No Avatar" class="w-[45px] h-[45px] rounded-full border-2 border-black">
+                <h1 class="text-2xl text-center">{{ opened_chat.name }}</h1>
+            </a>
+            <div class="flex flex-grow w-full h-[74svh] justify-center items-end">
+                <div id="chat-screen" class="p-4 grid grid-cols-1 w-full overflow-y-scroll justify-bottom">
+                    {% for message in chat_messages %}
+                    <div class="p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start {% if message.sender.id == request.user.id %}text-end bg-[#8b5cf6] justify-self-end{% endif %}" style="height: fit-content;">
+                        <p class="text-2xl text-white">{{ message.message }}</p>
+                        <p class="text-sm text-gray-300">{{ message.sent_at|date:"H:i" }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <form class="h-[6svh] text-2xl py-3 px-2 flex gap-2 items-center justify-center bg-gray-300 w-full flex flex-row" id="chat-box">
+                <input type="text" name="message" value="" class="p-3 text-xl border-1 border-black rounded-lg transition-all duration-300 onfocus:border-black flex-grow"/>
+                <button type="submit" class="bg-black text-xl py-2 px-3 border rounded-lg text-white"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+        </div>
     </div>
 
 
     <script type="text/javascript">
 
-        const statusElement = document.getElementById('connection-status')
-        statusElement.innerHTML = 'Connecting...'
+        
+        const chatScreen = document.getElementById('chat-screen')
+        chatScreen.scrollTop = chatScreen.scrollHeight;
         let url = `ws:///${window.location.host}/ws/chat-server/?id={{ chat_room_id }}`;
 
         let chatSocket = new WebSocket(url);
 
-        chatSocket.onopen = (event) => {
-            statusElement.innerHTML = 'Connected to the chat server';
-        }
+        // chatSocket.onopen = (event) => {
+        //     statusElement.innerHTML = 'Connected to the chat server';
+        // }
 
         chatSocket.onmessage = (event) => {
             let data = JSON.parse(event.data);
-            console.log(data);
+
+            if (data.type === 'connection') {
+                let messageElement = document.createElement('span');
+                messageElement.classList.add('p-4', 'my-2', 'justify-self-center', 'text-center', 'text-sm');
+                messageElement.innerHTML = 'Connected';
+                chatScreen.appendChild(messageElement);
+                return;
+            }
+
+            const message = `
+                <p class="text-2xl text-white">${data.message}</p>
+                <p class="text-sm text-gray-300">${new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                `;
 
             let messageElement = document.createElement('div');
-            messageElement.innerHTML = data.message;
-            document.body.appendChild(messageElement);
+            messageElement.setAttribute('class', `p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start ${data.sender == '{{request.user.id}}' ? 'text-end bg-[#8b5cf6] justify-self-end': '' }`);
+            messageElement.style.height = 'fit-content';
+            messageElement.innerHTML = message;
+            chatScreen.appendChild(messageElement);
         }
 
         chatSocket.onclose = (event) => {
-            statusElement.innerHTML = 'Disconnected from the chat server';
+            if (data.type === 'connection') {
+                let messageElement = document.createElement('span');
+                messageElement.classList.add('p-4', 'my-2', 'justify-self-center', 'text-center', 'text-sm');
+                messageElement.innerHTML = "Disconnected";
+                chatScreen.appendChild(messageElement);
+                return;
+            }
         }
 
-        chatSocket.onerror = (event) => {
-            statusElement.innerHTML = 'Error connecting to the chat server';
-        }
+        // chatSocket.onerror = (event) => {
+        //     statusElement.innerHTML = 'Error connecting to the chat server';
+        // }
         
         chatBoxFrom = document.getElementById('chat-box');
 
