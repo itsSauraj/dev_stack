@@ -85,7 +85,7 @@ class Message(BaseModel):
     is_read = models.BooleanField(default=False)
     
     def __str__(self):
-        return f"{self.sender.username} - {self.message[:20]}"
+        return f"{self.sender.username} - {self.receiver.username} - {self.message[:20]}"
 
     def mark_as_read(self):
         self.is_read = True

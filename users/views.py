@@ -233,15 +233,15 @@ class Channel:
         return messages
     
     @staticmethod
-    def get_last_read_message_id(user, channel_id):
-        last_read_message = Message.objects.filter(channel=channel_id, receiver=user, is_read=True).last()
+    def get_last_read_message_id(channel_id):
+        last_read_message = Message.objects.filter(channel=channel_id, is_read=True).order_by('-sent_at').first()
         if last_read_message:
             return last_read_message.id
         return None
 
     @staticmethod
     @login_required(login_url='login')
-    def chat(request, profile_id):            
+    def chat(request, profile_id):    
         
         channel_id = Channel.ChannelIDgenerator(user1=request.user.profile.id, user2=profile_id)
         chat_messages = Channel.get_messages(channel_id).filter(channel=channel_id)
@@ -257,13 +257,17 @@ class Channel:
         if not channel_id:
             return render(request, "chat.html", context={ 'no_chat': True })
         
-        filtered_chats = [
+        filtered_chats = [item for item in [
             {
-                "members": [member for member in chat.channel_members.all() if member != request.user],
+                "members": [member for member in chat.channel_members.all() if member != request.user.profile.user],
             } for chat in request.user.channelrecord_set.all()
-        ]
+        ] if len(item.get("members")) > 0]
         
-        last_read_message_id = None
+        for chat in filtered_chats:
+            chat_channel_id = Channel.ChannelIDgenerator(request.user.profile.id, chat.get("members")[0].profile.id)
+            chat["last_read_message_id"] = Channel.get_last_read_message_id(chat_channel_id)
+
+        last_read_message_id = Channel.get_last_read_message_id(channel_id)
         
         context = {
             "chat_room_id": channel_id,
@@ -271,6 +275,26 @@ class Channel:
             "opened_chat": opened_chat,
             "all_chats": filtered_chats,
             "last_read_message_id": last_read_message_id
-        }
+        }        
+        return render(request, "chat.html", context=context)
+    
+    @staticmethod
+    @login_required(login_url='login')
+    def chat_view(request, ):    
         
+        filtered_chats = [item for item in [
+            {
+                "members": [member for member in chat.channel_members.all() if member != request.user.profile.user],
+            } for chat in request.user.channelrecord_set.all()
+        ] if len(item.get("members")) > 0]
+        
+        for chat in filtered_chats:
+            chat_channel_id = Channel.ChannelIDgenerator(request.user.profile.id, chat.get("members")[0].profile.id)
+            chat["last_read_message_id"] = Channel.get_last_read_message_id(chat_channel_id)
+        
+        context = {
+            "chat_room_id": None,
+            "all_chats": filtered_chats,
+            "no_chat": True
+        }        
         return render(request, "chat.html", context=context)

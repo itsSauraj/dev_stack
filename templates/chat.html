@@ -8,10 +8,6 @@ Chat
 {% endblock %}
 
 {% block content %}
-
-{% if no_chat %}
-    <div>No chat opened</div>
-{% else %}
     <div class="flex h-[92svh] overflow-y-hidden">  
         <div class="bg-gray-200 w-[25%] h-[100%] overflow-y-scroll"> 
             <div class="p-3 bg-gray-300">
@@ -31,53 +27,62 @@ Chat
                 {% endfor %}
             </div>
         </div>
-        <div class="flex flex-col w-full">
-            <a class="h-[8svh] flex bg-gray-200 justify-start items-center gap-4 p-2"
-                href="{% url 'developer-view' opened_chat.id %}"
-            >
-                <img src="{% static opened_chat.avatar_url %}" alt="No Avatar" class="w-[45px] h-[45px] rounded-full border-2 border-black">
-                <h1 class="text-2xl text-center">{{ opened_chat.name }}</h1>
-            </a>
-            <div class="flex flex-grow w-full h-[74svh] justify-center items-end">
-                <div id="chat-screen" class="p-4 grid grid-cols-1 w-full overflow-y-scroll justify-bottom">
-                    {% for message in chat_messages %}
-                    <div class="p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start {% if message.sender.id == request.user.id %}text-end bg-[#8b5cf6] justify-self-end{% endif %}" style="height: fit-content;" data-message-id="{{ message.id }}">
-                        <p class="text-2xl text-white">{{ message.message }}</p>
-                        <div class="flex justify-between">
-                            <p class="text-sm text-gray-300">{{ message.sent_at|date:"H:i" }}</p>
-                            <span class="text-sm">
-                                {% if not message.is_read %}
-                                    <i class="fa-regular fa-circle text-green-300"></i>
-                                {% else %}
-                                    <i class="fa-solid fa-circle text-gray-200"></i>
-                                {% endif %}
-                            </span>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
+
+        {% if no_chat %}
+            <div class="flex-grow flex justify-center items-center">
+                <img src="{% static 'images/no-chat.png' %}" alt="Select a chat to start chatting"
+                    class="w-[50%] h-[50%]"
+                />
             </div>
-            <form class="h-[6svh] text-2xl py-3 px-2 flex gap-2 items-center justify-center bg-gray-300 w-full flex flex-row" id="chat-box">
-                <input type="text" name="message" value="" class="p-3 text-xl border-1 border-black rounded-lg transition-all duration-300 onfocus:border-black flex-grow"/>
-                <button type="submit" class="bg-black text-xl py-2 px-3 border rounded-lg text-white"><i class="fa-solid fa-paper-plane"></i></button>
-            </form>
-        </div>
+        {% else %}
+            <div class="flex flex-col w-full">
+                <a class="h-[8svh] flex bg-gray-200 justify-start items-center gap-4 p-2"
+                    href="{% url 'developer-view' opened_chat.id %}"
+                >
+                    <img src="{% static opened_chat.avatar_url %}" alt="No Avatar" class="w-[45px] h-[45px] rounded-full border-2 border-black">
+                    <h1 class="text-2xl text-center">{{ opened_chat.name }}</h1>
+                </a>
+                <div class="flex flex-grow w-full justify-center items-end">
+                    <div id="chat-screen" style="max-height: 80svh;" class="p-4 grid grid-cols-1 w-full overflow-y-scroll justify-bottom">
+                        {% for message in chat_messages %}
+                        <div class="p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start {% if message.sender.id == request.user.id %}text-end bg-[#8b5cf6] justify-self-end{% endif %}" style="height: fit-content;" data-message-id="{{ message.id }}" data-is-read="{{ message.is_read }}" data-sender-id="{{ message.sender.id }}">
+                            <p class="text-2xl text-white">{{ message.message }}</p>
+                            <div class="flex justify-between">
+                                <p class="text-sm text-gray-300">{{ message.sent_at|date:"H:i" }}</p>
+                                <span class="text-sm">
+                                    {% if message.is_read %}
+                                        <i class="fa-solid fa-check-double text-green-300"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-check text-gray-200"></i>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <form class="h-[6svh] text-2xl py-3 px-2 flex gap-2 items-center justify-center bg-gray-300 w-full flex flex-row" id="chat-box">
+                    <input type="text" name="message" value="" class="p-3 text-xl border-1 border-black rounded-lg transition-all duration-300 onfocus:border-black flex-grow"/>
+                    <button type="submit" class="bg-black text-xl py-2 px-3 border rounded-lg text-white"><i class="fa-solid fa-paper-plane"></i></button>
+                </form>
+            </div>
+        {% endif %}
     </div>
 
 
     <script type="text/javascript">
 
-        
         const chatScreen = document.getElementById('chat-screen')
         const lastReadMessage = chatScreen.querySelector('[data-message-id="{{ last_read_message_id }}"]');
+
         if (lastReadMessage) {
-            lastReadMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            lastReadMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
         } else {
             chatScreen.scrollTop = chatScreen.scrollHeight;
         }
-        let url = `ws:///${window.location.host}/ws/chat-server/?id={{ chat_room_id }}`;
+        let url = `ws://${window.location.host}/ws/chat/{{ chat_room_id }}/`;
 
-        let chatSocket = new WebSocket(url);
+        const chatSocket = new WebSocket(url);
 
         chatSocket.onopen = (event) => {
             console.log('Connected to the chat server');
@@ -85,6 +90,7 @@ Chat
 
         chatSocket.onmessage = (event) => {
             let data = JSON.parse(event.data);
+
 
             if (data.type === 'connection') {
                 let messageElement = document.createElement('span');
@@ -100,7 +106,7 @@ Chat
                     <div class="flex justify-between">
                         <p class="text-sm text-gray-300">${new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                         <span class="text-sm">
-                            ${data.is_read ? '<i class="fa-solid fa-circle text-gray-200"></i>' : '<i class="fa-regular fa-circle text-green-300"></i>'}
+                            ${data.is_read ? '<i class="fa-solid fa-check-double text-green-300"></i>' : '<i class="fa-solid fa-check text-gray-200"></i>'}
                         </span>
                     </div>
                     `;
@@ -110,8 +116,10 @@ Chat
                 messageElement.dataset.messageId = data.id;
                 messageElement.innerHTML = message;
                 chatScreen.appendChild(messageElement);
-    
-                if (messageElement.getBoundingClientRect().top < window.innerHeight) {
+
+                chatScreen.scrollTop = chatScreen.scrollHeight;
+                    
+                if ('{{ request.user.id }}' == data.receiver) {
                     chatSocket.send(JSON.stringify({
                         "action": "mark-as-read",
                         "message_id": data.id,
@@ -123,13 +131,33 @@ Chat
             if (data.type === "message-read"){
                 const messageElement = chatScreen.querySelector(`[data-message-id="${data.message_id}"]`);
                 if (messageElement) {
-                    messageElement.querySelector('span').innerHTML = '<i class="fa-solid fa-circle text-gray-200"></i>';
+                    messageElement.querySelector('span').innerHTML = '<i class="fa-solid fa-check-double text-green-300"></i>';
                 }
             }
 
+            if (data.type === "notification"){
+                if (data.notification.sender == '{{ request.user.id }}') {
+                    return;
+                }
+                showNotification(data.notification.title, data.notification.message);
+            }
+
+            function showNotification(title, body) {
+                if (Notification.permission === "granted") {
+                    new Notification(title, { body });
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === "granted") {
+                            new Notification(title, { body });
+                        }
+                    });
+                }
+            }
         }
 
         chatSocket.onclose = (event) => {
+            let data = JSON.parse(event.data);
+
             if (data.type === 'connection') {
                 let messageElement = document.createElement('span');
                 messageElement.classList.add('p-4', 'my-2', 'justify-self-center', 'text-center', 'text-sm');
@@ -139,9 +167,9 @@ Chat
             }
         }
 
-        // chatSocket.onerror = (event) => {
-        //     statusElement.innerHTML = 'Error connecting to the chat server';
-        // }
+        chatSocket.onerror = (event) => {
+            statusElement.innerHTML = 'Error connecting to the chat server';
+        }
         
         chatBoxFrom = document.getElementById('chat-box');
 
@@ -161,8 +189,28 @@ Chat
             }));
             chatBoxFrom.reset();
         }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+            if (entry.intersectionRatio > 0) {
+                const messageID = entry.target.dataset.messageId;
+                const senderID = entry.target.dataset.senderId;
+                const isRead = entry.target.dataset.isRead;
+
+                if ("{{ request.user.id }}" != senderID && isRead == "False") {
+                chatSocket.send(JSON.stringify({
+                    "action": "mark-as-read",
+                    "message_id": messageID,
+                    "readers_id": "{{ request.user.id }}"
+                }));
+                }
+            }
+            });
+        }, { threshold: [0.1] });
+
+        document.querySelectorAll('[data-message-id]').forEach(message => {
+            observer.observe(message);
+        });
         
     </script>
-
-{% endif %}
 {% endblock %}
