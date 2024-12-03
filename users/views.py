@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
-from users.models import User, ChannelRecord, Message
+from users.models import User, Message, ChatRecords
 
 from projects.models import Project
 
@@ -53,6 +53,14 @@ def logout_user(request):
     logout(request)
     messages.info(request, "User was logged out")
     return redirect('login')
+
+def update_online_status(user_id, socket_id, status):
+    user = get_user_by_id(user_id)
+
+    user.socket_id = socket_id
+    user.is_online = status
+    user.save()
+    return user.is_online
 
 def has_permission(profile, project_id):
     
@@ -206,71 +214,73 @@ def deleteSkill(request, pk):
     return redirect("profile")
 
 ####################################################################################################################
-
+from uuid import uuid4
 class Channel:
 
-    @staticmethod
-    def ChannelIDgenerator(user1, user2):
-        correct_order = sorted([str(user1), str(user2)])
-        channel_id = hashlib.md5(f"{correct_order[0]}{correct_order[1]}".encode()).hexdigest()
-        return channel_id
-    
-    def DecodeChannelID(channel_id):
-        return channel_id[:8]
 
     @staticmethod
-    @login_required(login_url='login')
-    def create_channel_record(user1, user2, channel_id):
-        channel_record = ChannelRecord.objects.create()
-        channel_record.channel_members.add(user1.user, user2.user)
-        channel_record.channel_id = channel_id
-        channel_record.save()
-        return channel_record
+    def ChannelIDgenerator(user):
+        
+        channel_id = hashlib.md5(f"{uuid4()}".encode()).hexdigest()
+        return channel_id
     
     @staticmethod
-    def get_messages(channel_id):
-        messages = Message.objects.filter(channel=channel_id)
+    def get_messages(user, chat_id):
+        messages = Message.objects.filter(chat_id=chat_id)
         return messages
     
     @staticmethod
-    def get_last_read_message_id(channel_id):
-        last_read_message = Message.objects.filter(channel=channel_id, is_read=True).order_by('-sent_at').first()
+    def get_last_read_message_id(user, chat_id):
+        
+        last_message = Message.objects.filter(chat_id=chat_id).order_by('-sent_at').first()
+        
+        if not last_message:
+            return None
+        
+        if last_message.sender == user:
+            return last_message.id
+        
+        last_read_message = Message.objects.filter(chat_id=chat_id, is_read=True, receiver=user).order_by('-sent_at').first()
         if last_read_message:
             return last_read_message.id
         return None
 
     @staticmethod
     @login_required(login_url='login')
-    def chat(request, profile_id):    
+    def chat(request, chat_id):    
+        socket_id = Channel.ChannelIDgenerator(user=request.user)
+        try:
+            opened_chat = get_user_profile_by_id(chat_id)
+        except Profile.DoesNotExist:
+            opened_chat = None
         
-        channel_id = Channel.ChannelIDgenerator(user1=request.user.profile.id, user2=profile_id)
-        chat_messages = Channel.get_messages(channel_id).filter(channel=channel_id)
+        members = [request.user, opened_chat.user]
+        try:
+            chat_record = ChatRecords.objects.filter(chat_members=request.user).filter(chat_members=opened_chat.user).distinct().first()
+        except ChatRecords.DoesNotExist:
+            chat_record = None
         
-        
-        channel_record = ChannelRecord.objects.filter(channel_id=channel_id)
-        
-        if not channel_record:
-            channel_record = Channel.create_channel_record(request.user.profile, get_user_profile_by_id(profile_id), channel_id)
-        
-        opened_chat = get_user_profile_by_id(profile_id)
-        
-        if not channel_id:
-            return render(request, "chat.html", context={ 'no_chat': True })
+        if not chat_record:
+            chat_record = ChatRecords.create_chat_record(members=members)
+            
+        chat_messages = Channel.get_messages(request.user, chat_id=chat_record.id)
         
         filtered_chats = [item for item in [
             {
-                "members": [member for member in chat.channel_members.all() if member != request.user.profile.user],
-            } for chat in request.user.channelrecord_set.all()
+                "id": chat.id,
+                "members": [member for member in chat.chat_members.all() if member != request.user.profile.user],
+            } for chat in request.user.chatrecords_set.all()
         ] if len(item.get("members")) > 0]
         
         for chat in filtered_chats:
-            chat_channel_id = Channel.ChannelIDgenerator(request.user.profile.id, chat.get("members")[0].profile.id)
-            chat["last_read_message_id"] = Channel.get_last_read_message_id(chat_channel_id)
+            chat["unread_message_count"] = Message.objects.filter(receiver=request.user, is_read=False, chat_id=chat.get("id")).count()
+            # chat["last_read_message_id"] = Channel.get_last_read_message_id(user=request.user, chat_id=chat_id)
 
-        last_read_message_id = Channel.get_last_read_message_id(channel_id)
+        last_read_message_id = Channel.get_last_read_message_id(user=request.user, chat_id=chat_record.id)
         
         context = {
-            "chat_room_id": channel_id,
+            "socket_id": socket_id,
+            "chat_room_id": chat_record.id,
             "chat_messages": chat_messages,
             "opened_chat": opened_chat,
             "all_chats": filtered_chats,
@@ -282,19 +292,23 @@ class Channel:
     @login_required(login_url='login')
     def chat_view(request, ):    
         
+        socket_id = Channel.ChannelIDgenerator(user=request.user)
+        
         filtered_chats = [item for item in [
             {
-                "members": [member for member in chat.channel_members.all() if member != request.user.profile.user],
-            } for chat in request.user.channelrecord_set.all()
+                "id": chat.id,
+                "members": [member for member in chat.chat_members.all() if member != request.user.profile.user],
+            } for chat in request.user.chatrecords_set.all()
         ] if len(item.get("members")) > 0]
         
         for chat in filtered_chats:
-            chat_channel_id = Channel.ChannelIDgenerator(request.user.profile.id, chat.get("members")[0].profile.id)
-            chat["last_read_message_id"] = Channel.get_last_read_message_id(chat_channel_id)
+            chat["unread_message_count"] = Message.objects.filter(receiver=request.user, is_read=False, chat_id=chat.get("id")).count()
+
         
         context = {
             "chat_room_id": None,
             "all_chats": filtered_chats,
-            "no_chat": True
+            "no_chat": True,
+            "socket_id": socket_id,
         }        
         return render(request, "chat.html", context=context)

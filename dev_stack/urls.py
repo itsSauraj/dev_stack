@@ -6,6 +6,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include('projects.urls')),
     path("chat/", Channel.chat_view, name="chat-home"),
-    path("chat/<uuid:profile_id>", Channel.chat, name="chat"),
+    path("chat/<uuid:chat_id>", Channel.chat, name="chat"),
     path("user/", include('users.urls')),
 ]

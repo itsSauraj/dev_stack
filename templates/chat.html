@@ -19,9 +19,20 @@ Chat
                     {% if chat.members.0.profile.id == opened_chat.id %} bg-gray-300 {% endif %}
                     hover:bg-gray-400 transition-all duration-300 rounded-lg"
                     style="height: fit-content;"
-                    href="/chat/{{ chat.members.0.profile.id }}">
-                    <img src="{% static chat.members.0.profile.avatar_url %}" alt="No Avatar" class="w-[45px] h-[45px] rounded-full border-2 border-black">
-                    <h1 class="text-2xl text-center">{{ chat.members.0.profile.name|default:chat.members.0.username }}</h1>
+                    href="/chat/{{ chat.members.0.profile.id }}"
+                    data-chat-id="{{ chat.id }}"
+                    >
+                    <div class="flex justify-between w-full">
+                        <div class="flex justify-center items-center gap-3">
+                            <img src="{% static chat.members.0.profile.avatar_url %}" alt="No Avatar" class="w-[45px] h-[45px] rounded-full border-2 border-black">
+                            <h1 class="text-2xl text-center">{{ chat.members.0.profile.name|default:chat.members.0.username }}</h1>
+                        </div>
+                        {% if chat.unread_message_count > 0 %}
+                            <span class="bg-[#8b5cf6] p-2 text-sm rounded-full text-white text-center w-[20px] h-[20px]">{{ chat.unread_message_count }}</span>
+                        {% else %}
+                            <span class="bg-[#8b5cf6] p-2 text-sm rounded-full text-white text-center w-[20px] h-[20px] opacity-0"></span>
+                        {% endif %} 
+                    </div>
                 </a>
                 <hr class="border-1 border-black"/> 
                 {% endfor %}
@@ -31,7 +42,7 @@ Chat
         {% if no_chat %}
             <div class="flex-grow flex justify-center items-center">
                 <img src="{% static 'images/no-chat.png' %}" alt="Select a chat to start chatting"
-                    class="w-[50%] h-[50%]"
+                    class="w-[600px] h-[50%]"
                 />
             </div>
         {% else %}
@@ -72,15 +83,17 @@ Chat
 
     <script type="text/javascript">
 
-        const chatScreen = document.getElementById('chat-screen')
-        const lastReadMessage = chatScreen.querySelector('[data-message-id="{{ last_read_message_id }}"]');
+        {% if chat_room_id %}
+            const chatScreen = document.getElementById('chat-screen')
+            const lastReadMessage = chatScreen.querySelector('[data-message-id="{{ last_read_message_id }}"]');
 
-        if (lastReadMessage) {
-            lastReadMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        } else {
-            chatScreen.scrollTop = chatScreen.scrollHeight;
-        }
-        let url = `ws://${window.location.host}/ws/chat/{{ chat_room_id }}/`;
+            if (lastReadMessage) {
+                lastReadMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            } else {
+                chatScreen.scrollTop = chatScreen.scrollHeight;
+            }
+        {% endif %}
+        let url = `ws://${window.location.host}/ws/chat/{{ socket_id }}/`;
 
         const chatSocket = new WebSocket(url);
 
@@ -90,7 +103,6 @@ Chat
 
         chatSocket.onmessage = (event) => {
             let data = JSON.parse(event.data);
-
 
             if (data.type === 'connection') {
                 let messageElement = document.createElement('span');
@@ -110,7 +122,16 @@ Chat
                         </span>
                     </div>
                     `;
-    
+                
+                if (data.chat_room_id != '{{ chat_room_id }}') {
+                    console.log(`Message received from another chat room id ${data.chat_room_id}`);
+                    const chat_messsage_received_id = data.chat_room_id;
+                    const chat_count_element = document.querySelector(`[data-chat-id="${chat_messsage_received_id}"]`).querySelector('span');
+                    chat_count_element.innerText = data.unread_message_count;
+                    chat_count_element.classList.remove('opacity-0');
+                    return;
+                }
+
                 let messageElement = document.createElement('div');
                 messageElement.className = `p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start ${data.sender == '{{request.user.id}}' ? 'text-end bg-[#8b5cf6] justify-self-end': '' }`;
                 messageElement.dataset.messageId = data.id;
@@ -132,6 +153,22 @@ Chat
                 const messageElement = chatScreen.querySelector(`[data-message-id="${data.message_id}"]`);
                 if (messageElement) {
                     messageElement.querySelector('span').innerHTML = '<i class="fa-solid fa-check-double text-green-300"></i>';
+                }
+
+                const chat_messsage_received_id = data.chat_room_id;
+                const chat_count_element = document.querySelector(`[data-chat-id="${chat_messsage_received_id}"]`).querySelector('span');
+                chat_count_element.innerText = data.unread_message_count;
+                if (data.unread_message_count == 0) {
+                    chat_count_element.classList.add('opacity-0');
+                } else {
+                    chat_count_element.classList.remove('opacity-0');
+                }
+            }
+
+            if (data.type === "message-sent"){
+                const messageElement = chatScreen.querySelector(`[data-message-id="${data.message_id}"]`);
+                if (messageElement) {
+                    messageElement.querySelector('span').innerHTML = '<i class="fa-solid fa-check-double text-gray-300"></i>';
                 }
             }
 
@@ -179,34 +216,36 @@ Chat
             sendMessage(event);
         });
         const sendMessage = (event) => {
-            let message = event.target.message.value;
+            let str_message = event.target.message.value;
             chatSocket.send(JSON.stringify({
                 'action': 'send-message',
-                'message': message,
+                'message': str_message,
                 'sent_at': new Date().toISOString(),
                 'sender': `{{ user.profile.id }}`,
                 'receiver': `{{ opened_chat.id }}`,
+                'chat_room_id': `{{ chat_room_id }}`
             }));
             chatBoxFrom.reset();
         }
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-            if (entry.intersectionRatio > 0) {
+            if (entry.isIntersecting) {
                 const messageID = entry.target.dataset.messageId;
                 const senderID = entry.target.dataset.senderId;
                 const isRead = entry.target.dataset.isRead;
 
                 if ("{{ request.user.id }}" != senderID && isRead == "False") {
-                chatSocket.send(JSON.stringify({
-                    "action": "mark-as-read",
-                    "message_id": messageID,
-                    "readers_id": "{{ request.user.id }}"
-                }));
+                    console.log('Marking as read');
+                    chatSocket.send(JSON.stringify({
+                        "action": "mark-as-read",
+                        "message_id": messageID,
+                        "readers_id": "{{ request.user.id }}"
+                    }));
                 }
             }
             });
-        }, { threshold: [0.1] });
+        }, { threshold: [1] });
 
         document.querySelectorAll('[data-message-id]').forEach(message => {
             observer.observe(message);

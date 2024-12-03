@@ -14,11 +14,15 @@ class BaseModel(models.Model):
         
 class User(AbstractUser, BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    testing = models.BooleanField(default=False)
+    socket_id = models.CharField(max_length=255, blank=True, null=True)
+    is_online = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.username)
 
+    @property
+    def online_status(self):
+        return self.is_online
     
 class Skills(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -58,35 +62,46 @@ class Profile(BaseModel):
             return self.avatar.url
         else:
             return "avatars/default.png"
-        
 
-class ChannelRecord(BaseModel):
+class ChatRecords(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    channel_id = models.CharField(max_length=100)
-    channel_name = models.CharField(max_length=100)
-    channel_members = models.ManyToManyField(User)
+    chat_members = models.ManyToManyField(User)
     
     def __str__(self):
-        return f"{self.channel_name or self.channel_id}"
+        return f"{self.id}"
     
     @classmethod
-    def get_user_channels(cls, user):
-        return cls.objects.filter(channel_members=user)
+    def get_user_chats(cls, user):
+        return cls.objects.filter(chat_members=user)
     
+    @classmethod
+    def get_user_chats(cls, user, chat_id):
+        return cls.objects.filter(chat_members=user, chat_id=chat_id)
+    
+    @classmethod
+    def create_chat_record(cls, members):
+        chat_record = cls.objects.create()
+        for member in members:
+            chat_record.chat_members.add(member)
+        return chat_record
 
 class Message(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # channel = models.ForeignKey(ChannelRecord, on_delete=models.CASCADE)
-    channel = models.TextField(default=None, null=True)
+    chat_id = models.ForeignKey(ChatRecords, on_delete=models.CASCADE)
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sender")
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="receiver")
     sent_at = models.DateTimeField(default=None, null=True)
     message = models.TextField()
     is_read = models.BooleanField(default=False)
+    is_sent = models.BooleanField(default=False)
     
     def __str__(self):
         return f"{self.sender.username} - {self.receiver.username} - {self.message[:20]}"
 
     def mark_as_read(self):
         self.is_read = True
+        self.save()
+        
+    def mark_as_sent(self):
+        self.is_sent = True
         self.save()
