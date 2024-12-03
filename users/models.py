@@ -28,7 +28,7 @@ class Skills(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     level = models.IntegerField(default=1)
-    profile = models.ForeignKey(User, on_delete=models.CASCADE)
+    profile = models.ForeignKey(User, on_delete=models.CASCADE, related_name="skills")
     bg_color = models.CharField(max_length=7, default="#007bff")
     fg_color = models.CharField(max_length=7, default="#ffffff")
     

@@ -10,12 +10,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
 from users.models import User, Message, ChatRecords
+from users.filters import ProfileFilter
 
 from projects.models import Project
 
 from .forms import SkillForm, UserRegistrationForm, ProfileForm
 
 from .models import Profile,Skills
+
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 def login_user(request):
@@ -145,10 +148,28 @@ def update_profile(request):
 
 
 def get_developers(request):
+    search_query = {'search': request.GET.get("search")}
+    page_number = request.GET.get('page')
     
-    profiles = Profile.objects.all()
+    searched_profiles = ProfileFilter(search_query, queryset=Profile.objects.all())
+
+    profiles = searched_profiles.qs
     
-    context = {"developers" : profiles }
+    paginator = Paginator(profiles, 25)
+    profiles = paginator.get_page(page_number)
+
+    context = {
+        'search_query': request.GET.get("search", ''),
+        "developers" : profiles,
+        "current_page": page_number,
+    }
+    
+    if page_number and int(page_number) > paginator.num_pages:
+        return {
+            "message": "End of page."
+        }
+    
+    
     return render(request, "users/our_developers.html", context)
 
 def view_profile(request, pk):

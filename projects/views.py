@@ -6,32 +6,49 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
-from .forms import ProjectForm, ReviewForm
+from projects.forms import ProjectForm, ReviewForm
 from users.views import has_permission
 
-from .models import Project, Tag, Review
+from projects.models import Project, Tag
 
-from .filters import ProjectFilter
+from .filters import ProjectFilter, ProjectSearchFilter
+
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 app_name = "projects"
 
 def homepage(request):
     return render(request, f"{app_name}/home.html")
 
-
 def projects(request):
-    projects = Project.objects.all()
+    search_query = {'search': request.GET.get("search")}
+    page_number = request.GET.get('page')
     
+    searched_projects  = ProjectSearchFilter(search_query, queryset=Project.objects.all())
+    projects = searched_projects.qs
+
     md = markdown.Markdown(extensions=["fenced_code"])
         
     for project in projects:
         project.description = project.description[:200] + "..."
         soup = BeautifulSoup(md.convert(project.description), 'html.parser')
         project.description = soup.get_text()
+        
+    paginator = Paginator(projects, 25)
+    projects = paginator.get_page(page_number)
     
     context = {
+        'search_query': request.GET.get("search", ''),
         "projects": projects,
+        "total_pages": paginator.num_pages,
+        "current_page": page_number,
     }
+    
+    if page_number and int(page_number) > paginator.num_pages:
+        return {
+            "message": "End of page."
+        }
+    
     return render(request, f"{app_name}/projects.html", context)
 
 def project(request, pk):
