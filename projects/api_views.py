@@ -19,10 +19,16 @@ class ReviewListView:
         
         if request.method == 'GET':
             reviews_queryset = Review.objects.filter(project_id=project_id)
-            paginator = Paginator(reviews_queryset, 8)
+            paginator = Paginator(reviews_queryset, 4)
             
             page_number = request.GET.get('page')
+            
             reviews_queryset = paginator.get_page(page_number)
+            if not reviews_queryset:
+                return Response({"message": "No reviews found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            if page_number and int(page_number) > paginator.num_pages:
+                return Response({"message": "End of page."}, status=status.HTTP_404_NOT_FOUND)
             
             serializer = ReviewSerializer(reviews_queryset, many=True)
             

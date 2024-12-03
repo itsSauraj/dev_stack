@@ -18,8 +18,4 @@ urlpatterns = [
     
     # API URLS using DRF
     path("api/reviews/<uuid:project_id>", ReviewListView.get_post, name="get-project-reviews"),
-    
-    
-    # URLS FOR TESTING
-    path("test/<uuid:project_id>", views.test, name="test"),
 ]

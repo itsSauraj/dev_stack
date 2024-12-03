@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load my_tags %}
+
+{% block title %}
+Chat
+{% endblock %}
+
+{% block content %}
+    <div class="flex h-[92svh] overflow-y-hidden">  
+        <div class="bg-gray-200 w-[25%] h-[100%] overflow-y-scroll"> 
+            <div class="p-3 bg-gray-300">
+                <h3 class="text-center text-2xl text-uppercase">Chats</h3>
+            </div>
+            <div class="p-3 flex flex-col gap-1">
+                {% for chat in all_chats %}
+                    <a class="h-[8svh] flex bg-gray-200 justify-start items-center gap-4 p-2 border-black
+                    {% if chat.members.0.profile.id == opened_chat.id %} bg-gray-300 {% endif %}
+                    hover:bg-gray-400 transition-all duration-300 rounded-lg"
+                    style="height: fit-content;"
+                    href="/chat/{{ chat.members.0.profile.id }}"
+                    data-chat-id="{{ chat.id }}"
+                    >
+                    <div class="flex justify-between w-full">
+                        <div class="flex justify-center items-center gap-3">
+                            <img src="{% static chat.members.0.profile.avatar_url %}" alt="No Avatar" class="w-[45px] h-[45px] rounded-full border-2 border-black">
+                            <h1 class="text-2xl text-center">{{ chat.members.0.profile.name|default:chat.members.0.username }}</h1>
+                        </div>
+                        {% if chat.unread_message_count > 0 %}
+                            <span class="bg-[#8b5cf6] p-2 text-sm rounded-full text-white text-center w-[20px] h-[20px]">{{ chat.unread_message_count }}</span>
+                        {% else %}
+                            <span class="bg-[#8b5cf6] p-2 text-sm rounded-full text-white text-center w-[20px] h-[20px] opacity-0"></span>
+                        {% endif %} 
+                    </div>
+                </a>
+                <hr class="border-1 border-black"/> 
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if no_chat %}
+            <div class="flex-grow flex justify-center items-center">
+                <img src="{% static 'images/no-chat.png' %}" alt="Select a chat to start chatting"
+                    class="w-[600px] h-[50%]"
+                />
+            </div>
+        {% else %}
+            <div class="flex flex-col w-full">
+                <a class="h-[8svh] flex bg-gray-200 justify-start items-center gap-4 p-2"
+                    href="{% url 'developer-view' opened_chat.id %}"
+                >
+                    <img src="{% static opened_chat.avatar_url %}" alt="No Avatar" class="w-[45px] h-[45px] rounded-full border-2 border-black">
+                    <h1 class="text-2xl text-center">{{ opened_chat.name }}</h1>
+                </a>
+                <div class="flex flex-grow w-full justify-center items-end">
+                    <div id="chat-screen" style="max-height: 80svh;" class="p-4 grid grid-cols-1 w-full overflow-y-scroll justify-bottom">
+                        {% for message in chat_messages %}
+                        <div class="p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start {% if message.sender.id == request.user.id %}text-end bg-[#8b5cf6] justify-self-end{% endif %}" style="height: fit-content;" data-message-id="{{ message.id }}" data-is-read="{{ message.is_read }}" data-sender-id="{{ message.sender.id }}">
+                            <p class="text-2xl text-white">{{ message.message }}</p>
+                            <div class="flex justify-between">
+                                <p class="text-sm text-gray-300">{{ message.sent_at|date:"H:i" }}</p>
+                                <span class="text-sm">
+                                    {% if message.is_read %}
+                                        <i class="fa-solid fa-check-double text-green-300"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-check text-gray-200"></i>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <form class="h-[6svh] text-2xl py-3 px-2 flex gap-2 items-center justify-center bg-gray-300 w-full flex flex-row" id="chat-box">
+                    <input type="text" name="message" value="" class="p-3 text-xl border-1 border-black rounded-lg transition-all duration-300 onfocus:border-black flex-grow"/>
+                    <button type="submit" class="bg-black text-xl py-2 px-3 border rounded-lg text-white"><i class="fa-solid fa-paper-plane"></i></button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+
+
+    <script type="text/javascript">
+
+        {% if chat_room_id %}
+            const chatScreen = document.getElementById('chat-screen')
+            const lastReadMessage = chatScreen.querySelector('[data-message-id="{{ last_read_message_id }}"]');
+
+            if (lastReadMessage) {
+                lastReadMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            } else {
+                chatScreen.scrollTop = chatScreen.scrollHeight;
+            }
+        {% endif %}
+        let url = `ws://${window.location.host}/ws/chat/{{ socket_id }}/`;
+
+        const chatSocket = new WebSocket(url);
+
+        chatSocket.onopen = (event) => {
+            console.log('Connected to the chat server');
+        }
+
+        chatSocket.onmessage = (event) => {
+            let data = JSON.parse(event.data);
+
+            if (data.type === 'connection') {
+                let messageElement = document.createElement('span');
+                messageElement.classList.add('p-4', 'my-2', 'justify-self-center', 'text-center', 'text-sm');
+                messageElement.textContent = 'Connected';
+                chatScreen.appendChild(messageElement);
+                return;
+            }
+
+            if (data.type === 'message') {
+                const message = `
+                    <p class="text-2xl text-white">${data.message}</p>
+                    <div class="flex justify-between">
+                        <p class="text-sm text-gray-300">${new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        <span class="text-sm">
+                            ${data.is_read ? '<i class="fa-solid fa-check-double text-green-300"></i>' : '<i class="fa-solid fa-check text-gray-200"></i>'}
+                        </span>
+                    </div>
+                    `;
+                
+                if (data.chat_room_id != '{{ chat_room_id }}') {
+                    console.log(`Message received from another chat room id ${data.chat_room_id}`);
+                    const chat_messsage_received_id = data.chat_room_id;
+                    const chat_count_element = document.querySelector(`[data-chat-id="${chat_messsage_received_id}"]`).querySelector('span');
+                    chat_count_element.innerText = data.unread_message_count;
+                    chat_count_element.classList.remove('opacity-0');
+                    return;
+                }
+
+                let messageElement = document.createElement('div');
+                messageElement.className = `p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start ${data.sender == '{{request.user.id}}' ? 'text-end bg-[#8b5cf6] justify-self-end': '' }`;
+                messageElement.dataset.messageId = data.id;
+                messageElement.innerHTML = message;
+                chatScreen.appendChild(messageElement);
+
+                chatScreen.scrollTop = chatScreen.scrollHeight;
+                    
+                if ('{{ request.user.id }}' == data.receiver) {
+                    chatSocket.send(JSON.stringify({
+                        "action": "mark-as-read",
+                        "message_id": data.id,
+                        "readers_id": "{{ request.user.id }}"
+                    }));
+                }
+            }
+
+            if (data.type === "message-read"){
+                const messageElement = chatScreen.querySelector(`[data-message-id="${data.message_id}"]`);
+                if (messageElement) {
+                    messageElement.querySelector('span').innerHTML = '<i class="fa-solid fa-check-double text-green-300"></i>';
+                }
+
+                const chat_messsage_received_id = data.chat_room_id;
+                const chat_count_element = document.querySelector(`[data-chat-id="${chat_messsage_received_id}"]`).querySelector('span');
+                chat_count_element.innerText = data.unread_message_count;
+                if (data.unread_message_count == 0) {
+                    chat_count_element.classList.add('opacity-0');
+                } else {
+                    chat_count_element.classList.remove('opacity-0');
+                }
+            }
+
+            if (data.type === "message-sent"){
+                const messageElement = chatScreen.querySelector(`[data-message-id="${data.message_id}"]`);
+                if (messageElement) {
+                    messageElement.querySelector('span').innerHTML = '<i class="fa-solid fa-check-double text-gray-300"></i>';
+                }
+            }
+
+            if (data.type === "notification"){
+                if (data.notification.sender == '{{ request.user.id }}') {
+                    return;
+                }
+                showNotification(data.notification.title, data.notification.message);
+            }
+
+            function showNotification(title, body) {
+                if (Notification.permission === "granted") {
+                    new Notification(title, { body });
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === "granted") {
+                            new Notification(title, { body });
+                        }
+                    });
+                }
+            }
+        }
+
+        chatSocket.onclose = (event) => {
+            let data = JSON.parse(event.data);
+
+            if (data.type === 'connection') {
+                let messageElement = document.createElement('span');
+                messageElement.classList.add('p-4', 'my-2', 'justify-self-center', 'text-center', 'text-sm');
+                messageElement.innerHTML = "Disconnected";
+                chatScreen.appendChild(messageElement);
+                return;
+            }
+        }
+
+        chatSocket.onerror = (event) => {
+            statusElement.innerHTML = 'Error connecting to the chat server';
+        }
+        
+        chatBoxFrom = document.getElementById('chat-box');
+
+        
+        chatBoxFrom.addEventListener('submit', function(event){
+            event.preventDefault();
+            sendMessage(event);
+        });
+        const sendMessage = (event) => {
+            let str_message = event.target.message.value;
+            chatSocket.send(JSON.stringify({
+                'action': 'send-message',
+                'message': str_message,
+                'sent_at': new Date().toISOString(),
+                'sender': `{{ user.profile.id }}`,
+                'receiver': `{{ opened_chat.id }}`,
+                'chat_room_id': `{{ chat_room_id }}`
+            }));
+            chatBoxFrom.reset();
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const messageID = entry.target.dataset.messageId;
+                const senderID = entry.target.dataset.senderId;
+                const isRead = entry.target.dataset.isRead;
+
+                if ("{{ request.user.id }}" != senderID && isRead == "False") {
+                    console.log('Marking as read');
+                    chatSocket.send(JSON.stringify({
+                        "action": "mark-as-read",
+                        "message_id": messageID,
+                        "readers_id": "{{ request.user.id }}"
+                    }));
+                }
+            }
+            });
+        }, { threshold: [1] });
+
+        document.querySelectorAll('[data-message-id]').forEach(message => {
+            observer.observe(message);
+        });
+        
+    </script>
+{% endblock %}

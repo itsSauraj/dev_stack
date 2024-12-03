@@ -64,8 +64,11 @@ Before you begin, ensure you have the following installed:
    ```
 7. **Run the development server**:
 
+   * gunicorn is used because of this application being a ASGI application and not WSGI
+   * Note: `python manage.py runserver` does not run the application in ASGI
+
    ```bash
-    python manage.py runserver
+    gunicorn dev_stack.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
    ```
    Open your browser and navigate to http://127.0.0.1:8000/ to access the project.
 
