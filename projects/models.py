@@ -20,7 +20,7 @@ class Project(BaseModal):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     poster = models.ImageField(upload_to="posters/", default="posters/default.jpg")
     title = models.CharField(max_length=100, blank=True, null=True)
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     demo_link = models.URLField(blank=True, null=True)
     source_link = models.URLField(blank=True, null=True)
     tags = models.ManyToManyField('Tag', blank=True)

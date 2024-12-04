@@ -1,4 +1,10 @@
 /* General container for markdown */
+.markdown-content *{
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
 .markdown-content {
     font-family: 'Helvetica Neue', Arial, sans-serif;
     line-height: 1.6;
@@ -14,7 +20,6 @@
     text-align: left;
 }
 
-/* Headings */
 .markdown-content h1 {
     font-size: 2.5em;
     margin-bottom: 0.5em;
@@ -36,12 +41,10 @@
     margin-bottom: 0.5em;
 }
 
-/* Paragraphs */
 .markdown-content p {
     margin-bottom: 1em;
 }
 
-/* Blockquotes */
 .markdown-content blockquote {
     border-left: 4px solid #ddd;
     margin: 1.5em 0;
@@ -50,7 +53,6 @@
     background: #f9f9f9;
 }
 
-/* Code blocks */
 .markdown-content pre {
     background: #f4f4f4;
     padding: 1em;
@@ -65,7 +67,6 @@
     font-family: 'Courier New', Courier, monospace;
 }
 
-/* Lists */
 .markdown-content ul {
     margin: 1em 0;
     padding-left: 2em;
@@ -78,7 +79,6 @@
     list-style-type: decimal;
 }
 
-/* Tables */
 .markdown-content table {
     width: 100%;
     border-collapse: collapse;
@@ -96,7 +96,6 @@
     font-weight: bold;
 }
 
-/* Links */
 .markdown-content a {
     color: #1e90ff;
     text-decoration: none;
@@ -106,10 +105,21 @@
     text-decoration: underline;
 }
 
-/* Images */
 .markdown-content img {
     max-width: 300px;
     height: auto;
     display: block;
     margin: 1em 0;
+}
+
+.markdown-content pre {
+    background-color: #ebebeb; /* Tailwind's bg-gray-900 */
+    border-radius: 0.5rem;    /* Tailwind's rounded-lg */
+    padding: 1rem;            /* Tailwind's p-4 */
+    overflow: auto;           /* Tailwind's overflow-auto */
+    font-family: "Courier New", Courier, monospace; /* Tailwind's font-mono */
+    font-size: 1.2rem;      /* Tailwind's text-sm (14px) */
+    color: black;
+    border: 2px solid #c0bfbf; 
+    margin: 1rem 0;
 }

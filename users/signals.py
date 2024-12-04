@@ -1,9 +1,7 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
-# from django.contrib.auth.models import User
 from .models import Profile, User
-
     
 @receiver(post_save, sender=User)
 def user_created(sender, instance, created, **kwargs):    
@@ -19,10 +17,27 @@ def user_deleted(sender, instance, **kwargs):
     try:
       projects = instance.profile.project_set.all()
       skills = instance.profile.skill_set.all()
+      
+      #deleting user's projects
       for project in projects:
         project.delete()
+        
+      #deleting user's skills
       for skill in skills:
         skill.delete()
+      
+      #deleting user's chat records
+      for chatRecords in instance.profile.chat_records.all():
+        #deleting user's messages
+        for message in chatRecords.message_set.all():
+          message.delete()
+        chatRecords.delete()
+        
+      #deleting user's reviews
+      for review in instance.profile.review_set.all():
+        review.delete()
+      
+      #deleting user's profile
       instance.profile.delete()
     except:
       pass

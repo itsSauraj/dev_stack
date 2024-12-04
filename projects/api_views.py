@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
+from .services.reviews import ReviewService
+
 class ReviewListView:
     
     @staticmethod

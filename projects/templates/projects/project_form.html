@@ -10,7 +10,7 @@
 {% block content %}
 
   <div class="flex w-full justify-center items-center">
-    <div class="container w-[50%]">
+    <div class="container w-[80%]">
         <form method="POST" class="p-5 bg-gray-300 m-4 shadow-lg shadow-indigo-500/40"
           {% if not update %}
             action="{% url 'create-project' %}?next={% url 'profile' %}"
@@ -22,7 +22,7 @@
           <a class="backButton" href="{% url 'profile' %}"><i class="fa-solid fa-chevron-left"></i></a>
           <br>
           <div class="flex justify-center">
-            <div class="p-1 relative group border-2 border-black w-[100%] aspect-video">
+            <div class="p-1 relative group border-2 border-black w-[50%] aspect-video">
                 <img
                   {% if not update %}
                     src="{% static 'images/posters/default.jpg' %}"

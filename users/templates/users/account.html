@@ -10,7 +10,7 @@
 
 <!-- Main Section -->
 <main class="settingsPage profile my-md">
-  <div class="container">
+  <div class="container flex">
     <div class="layout">
       <div class="column column--1of3">
         <div class="card text-center">
@@ -108,7 +108,7 @@
       <div class="column column--2of3">
         <div class="devInfo">
           <h3 class="devInfo__title">About Me</h3>
-          <p class="devInfo__about">{{profile.short_bio}}</p>
+          <p class="devInfo__about">{{profile.bio}}</p>
         </div>
         <div class="settings">
           <h3 class="settings__title">Skills</h3>
@@ -174,7 +174,7 @@
                 <a class="w-[80px] text-blue-500 bg-black rounded-lg text-xl py-2 px-4 flex items-center gap-2" href="{% url 'update-project' project.id %}?next={% url 'update-profile' %}"><i class="fa-solid fa-pen-to-square"></i>Edit</a>
 
                 {% if request.user.is_authenticated %}
-                  <button class="w-[80px] text-red-500 bg-black rounded-lg text-xl py-2 px-4 flex items-center gap-2" onclick="toggleModal('{{ project.username }}', '{{ project.title }}')"><i class="fa-solid fa-trash"></i>Delete</button>
+                  <button class="w-[80px] text-red-500 bg-black rounded-lg text-xl py-2 px-4 flex items-center gap-2" onclick="toggleModal('{{ project.id }}', '{{ project.title }}')"><i class="fa-solid fa-trash"></i>Delete</button>
                 {% endif %}
               </div>
             {% endif %}
