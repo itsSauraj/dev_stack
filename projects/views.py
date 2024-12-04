@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
 from projects.forms import ProjectForm, ReviewForm
-from users.views import has_permission
+from users.views import UserView
 
 from projects.models import Project, Tag
 
@@ -16,6 +16,7 @@ from .filters import ProjectFilter, ProjectSearchFilter
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 app_name = "projects"
+has_permission = UserView.has_permission
 
 def homepage(request):
     return render(request, f"{app_name}/home.html")
@@ -127,15 +128,11 @@ def create_project(request):
     }
     if next:
         context["next"] = next
-    return render(request, f"{app_name}/create_project.html", context)
-
+    return render(request, f"{app_name}/project_form.html", context)
 
 @login_required(login_url="/user/login/")
+@has_permission
 def update_project(request, pk):
-
-    if not has_permission(request.user.profile, pk):
-        return redirect("developer", pk=request.user.profile.id)
-    
     next = request.GET.get("next") or None
     
     project = Project.objects.get(id=pk)
@@ -144,7 +141,7 @@ def update_project(request, pk):
         
         tags_string = request.POST.get("tags")
         tags = tags_string.split(",")
-        tags = [tag.strip() for tag in tags if len(tag.strip()) > 0]
+        tags = [tag.strip().lower() for tag in tags if len(tag.strip()) > 0]
 
         form = ProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
@@ -166,14 +163,12 @@ def update_project(request, pk):
         "update": True,
         "project": project
     }
-    return render(request, f"{app_name}/create_project.html", context,)
+    return render(request, f"{app_name}/project_form.html", context)
 
 
 @login_required(login_url="/user/login/")
+@has_permission
 def delete_project(request):
-    if not has_permission(request.user.profile, pk):
-        return redirect("developer", pk=request.user.profile.id)
-    
     
     next = request.GET.get("next") or None
     

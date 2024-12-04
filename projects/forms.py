@@ -4,7 +4,7 @@ from django.forms import ModelForm, TextInput, Textarea, Select
 from .models import Project, Review
 
 
-class ProjectForm(ModelForm):
+class   ProjectForm(ModelForm):
     class Meta:
         model = Project
         fields = '__all__'

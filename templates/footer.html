@@ -134,6 +134,12 @@
     </div>
   </div>
   <div class="w-full bg-gray-500 text-center text-lg py-2">
-    <p class="text-white">&copy; 2023 DEV STACK</p>
+    <p class="text-white">&copy; <span id="copy-year" class="text-white"></span> DEV STACK</p>
   </div>
 </footer>
+
+<script>
+  const date = new Date();
+  const year = date.getFullYear();
+  document.getElementById('copy-year').textContent = year;
+</script>

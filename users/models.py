@@ -42,7 +42,7 @@ class Profile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     name = models.CharField(max_length=255)
     short_intro = models.TextField(null=True, blank=True)
-    short_bio = models.TextField(null=True, blank=True)
+    bio = models.TextField(null=True, blank=True)
     social_github = models.CharField(max_length=200, blank=True, null=True)
     social_twitter = models.CharField(max_length=200, blank=True, null=True)
     social_linkedin = models.CharField(max_length=200, blank=True, null=True)
@@ -61,7 +61,7 @@ class Profile(BaseModel):
         if self.avatar and hasattr(self.avatar, 'url'):
             return self.avatar.url
         else:
-            return "avatars/default.png"
+            return "images/avatars/default.png"
 
 class ChatRecords(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

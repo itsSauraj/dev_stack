@@ -113,7 +113,7 @@
         <div class="settings">
           <h3 class="settings__title">Skills</h3>
           {% if not view %}
-          <a class="tag tag--pill tag--sub settings__btn tag--lg hover:bg-gray-200" href="{% url 'add-skill' request.user.profile.id %}"><i
+          <a class="tag tag--pill tag--sub settings__btn tag--lg bg-black rounded-lg text-white hover:opacity-75" href="{% url 'add-skill' request.user.profile.id %}"><i
             class="im im-plus"></i> Add Skill</a>
           {% endif %}
         </div>
@@ -148,13 +148,13 @@
         <div class="settings mb-8">
           <h3 class="settings__title">Projects</h3>
           {% if not view %}
-          <a class="tag tag--pill tag--sub settings__btn tag--lg hover:bg-gray-200" href="{% url 'create-project' %}"><i
+          <a class="tag tag--pill tag--sub settings__btn tag--lg  bg-black rounded-lg text-white hover:opacity-75" href="{% url 'create-project' %}"><i
               class="im im-plus"></i> Add Project</a>
           {% endif %}
         </div>
-        <section id="user-projects" class="flex flex-col gap-2 border border-gray-200">
+        <section id="user-projects" class="flex flex-col border bg-gray-200 gap-2">
         {% for project in projects %}
-          <div class="shadow-inner shadow-2xl space-between items-center flex hover:bg-[#cbd5e1] transition-all ease-in duration-300">
+          <div class="shadow-inner shadow-2xl space-between items-center flex hover:bg-[#cbd5e1] transition-all ease-in duration-200">
             <div class="w-[200px] pl-10 flex-none">
               <a href="{% url 'project' project.id %}">
                 <img class="w-[200px] h-[110px] rounded" src="{% static project.poster_url %}" alt="Project Thumbnail" />
@@ -170,12 +170,11 @@
               </div>
             </div>
             {% if not view %}
-              <div class="w-[100px] flex flex-col p-10 flex-none">
-                <a class="tag tag--pill tag--main settings__btn" href="{% url 'update-project' project.id %}?next={% url 'update-profile' %}"><i
-                    class="im im-edit"></i> Edit</a>
+              <div class="w-[100px] flex flex-col p-10 flex-none justify-center items-center gap-2">
+                <a class="w-[80px] text-blue-500 bg-black rounded-lg text-xl py-2 px-4 flex items-center gap-2" href="{% url 'update-project' project.id %}?next={% url 'update-profile' %}"><i class="fa-solid fa-pen-to-square"></i>Edit</a>
 
                 {% if request.user.is_authenticated %}
-                  <button class="tag tag--pill tag--main settings__btn" onclick="toggleModal('{{ project.username }}', '{{ project.title }}')">Delete</button>
+                  <button class="w-[80px] text-red-500 bg-black rounded-lg text-xl py-2 px-4 flex items-center gap-2" onclick="toggleModal('{{ project.username }}', '{{ project.title }}')"><i class="fa-solid fa-trash"></i>Delete</button>
                 {% endif %}
               </div>
             {% endif %}

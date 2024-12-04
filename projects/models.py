@@ -34,7 +34,7 @@ class Project(BaseModal):
         if self.poster and hasattr(self.poster, 'url'):
             return self.poster.url
         else:
-            return "posters/default.png"
+            return "images/posters/default.jpg"
 
 
 class Tag(models.Model):
