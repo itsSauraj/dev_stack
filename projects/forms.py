@@ -1,10 +1,10 @@
 from django.forms import ModelForm, TextInput, Textarea, Select
-
+from django_summernote.widgets import SummernoteWidget
 
 from .models import Project, Review
 
 
-class ProjectForm(ModelForm):
+class   ProjectForm(ModelForm):
     class Meta:
         model = Project
         fields = '__all__'
@@ -14,10 +14,7 @@ class ProjectForm(ModelForm):
               attrs={
                 'placeholder': 'Title'
               }),
-            'description': Textarea(
-              attrs={
-                'placeholder': 'Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of class....'
-              }),
+            'description': SummernoteWidget(),
             'demo_link': TextInput(
               attrs={
                 'placeholder': 'https://example.com'

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load static %}
+{% load my_tags %}
 
 {% block title %}
     Edit Account
@@ -13,21 +14,77 @@
 <main class="formPage my-xl">
     <div class="content-box">
         <div class="formWrapper">
-            <a class="backButton" href="{% url 'profile' %}"><i class="fa-solid fa-chevron-left"></i></a>
-            <br>
+                <a class="backButton" href="{% url 'profile' %}"><i class="fa-solid fa-chevron-left"></i></a>
+                <br>
 
             <form class="form" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-
+                <div class="flex justify-center">
+                    <div class="p-1 relative group rounded-full border-2 border-black h-[150px] w-[150px]">
+                        <img src="{% static profile_preview_image %}" alt="preview_image" 
+                            class="w-full h-full border-2 rounded-full border-black border-dotted"
+                        >
+                        <div class="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full w-full h-full" id="image_hover_cam">
+                            <i class="fa-solid fa-camera text-white text-4xl"></i>
+                        </div>
+                    </div>
+                </div>
                 {% for field in form %}
-                <div class="form__field">
-                    <label for="formInput#text">{{field.label}}</label>
+                <div class="form__field" id="{{ field.label|create_for }}_container">
+                    <label for="{{ field.label|create_for }}">{{field.label}}</label>
                     {{field}}
                 </div>
                 {% endfor %}
 
                 <input class="btn btn--sub btn--lg  my-md" type="submit" value="Submit" />
             </form>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const fileInput = document.getElementById('id_avatar');
+                    const fileInputCointainer = document.getElementById('id_avatar_container');
+                    const previewImage = document.querySelector('img[alt="preview_image"]');
+                    const imageHoverCam = document.getElementById('image_hover_cam');
+
+                    fileInputCointainer.style.display = 'none';
+                    fileInput.style.display = 'none';
+
+                    imageHoverCam.addEventListener('click', function() {
+                        fileInput.click();
+                    });
+
+                    fileInput.addEventListener('change', function(event) {
+                        const file = event.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                previewImage.src = e.target.result;
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+
+                    imageHoverCam.addEventListener('dragover', function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    });
+
+                    imageHoverCam.addEventListener('drop', function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        const file = event.dataTransfer.files[0];
+                        if (file) {
+                            const reader = new FileReader();    
+                            reader.onload = function(e) {
+                                previewImage.src = e.target.result;
+                            };
+                            reader.readAsDataURL(file);
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(file);
+                            fileInput.files = dataTransfer.files;
+                        }
+                    });
+                });
+            </script>
         </div>
     </div>
 </main>

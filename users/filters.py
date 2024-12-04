@@ -15,6 +15,6 @@ class ProfileFilter(django_filters.FilterSet):
         return queryset.filter(
             Q(name__icontains=value) |
             Q(short_intro__icontains=value) |
-            Q(short_bio__icontains=value) | 
+            Q(bio__icontains=value) | 
             Q(user__skills__name__icontains=value)
         ).distinct()

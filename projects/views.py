@@ -1,192 +1,124 @@
-import markdown
-from bs4 import BeautifulSoup
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
-from projects.forms import ProjectForm, ReviewForm
-from users.views import has_permission
+from projects.forms import ProjectForm
+from users.views import UserView
 
 from projects.models import Project, Tag
 
-from .filters import ProjectFilter, ProjectSearchFilter
+
+from .services.reviews import ReviewService
+from .services.projects import ProjectService
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 app_name = "projects"
+has_permission = UserView.has_permission
 
 def homepage(request):
     return render(request, f"{app_name}/home.html")
 
-def projects(request):
-    search_query = {'search': request.GET.get("search")}
-    page_number = request.GET.get('page')
-    
-    searched_projects  = ProjectSearchFilter(search_query, queryset=Project.objects.all())
-    projects = searched_projects.qs
-
-    md = markdown.Markdown(extensions=["fenced_code"])
-        
-    for project in projects:
-        project.description = project.description[:200] + "..."
-        soup = BeautifulSoup(md.convert(project.description), 'html.parser')
-        project.description = soup.get_text()
-        
-    paginator = Paginator(projects, 25)
-    projects = paginator.get_page(page_number)
-    
-    context = {
-        'search_query': request.GET.get("search", ''),
-        "projects": projects,
-        "total_pages": paginator.num_pages,
-        "current_page": page_number,
-    }
-    
-    if page_number and int(page_number) > paginator.num_pages:
-        return {
-            "message": "End of page."
-        }
-    
-    return render(request, f"{app_name}/projects.html", context)
-
-def project(request, pk):
-    project = Project.objects.get(id=pk)
-    projects = ProjectFilter({"creator__id": project.creator.id}, queryset=Project.objects.all())
-        
-    md = markdown.Markdown(extensions=["fenced_code"])
-    project.description = md.convert(project.description)
-    
-    form = ReviewForm()
-    
-    reviews_queryset = project.reviews.all()
-    
-    total_rating = sum([review.get_review_stars() for review in reviews_queryset])
-    average_rating = total_rating / len(reviews_queryset) if reviews_queryset else 0
-    
-    context = {
-        "project": project,
-        "projects": projects.qs,
-        "reviews_from": form,
-        "total_reviews": len(reviews_queryset),
-        "average_rating": average_rating,
-    }
-    
-    if request.method == "POST":
-        
-        form_data = request.POST.copy()
-        form_data["project"] = project
-        form_data["project__id"] = project.id
-        
-        form = ReviewForm(form_data)
-        
-        if form.is_valid():
-            review = form.save()
-            try:
-                review.created_by = request.user.profile or None
-            except:
-                pass
-            review.save()
-            messages.success(request, "Review added successfully")
-            return render(request, f"{app_name}/view_project.html", context=context)
-        
-    return render(request, f"{app_name}/view_project.html", context=context)
-
-
-@login_required(login_url="/user/login/")
-def create_project(request):
-    form = ProjectForm()
-    next = request.GET.get("next")
-    if request.method == "POST":
-
-        tags_string = request.POST.get("tags")
-        tags = tags_string.split(",")
-        tags = [tag.strip() for tag in tags if len(tag.strip()) > 0]
-        
-        form = ProjectForm(request.POST, request.FILES)
-        if form.is_valid():
-            project = form.save()
-            project.creator = request.user.profile
-            project.save()
-        
-            for tag in project.tags.all():
-                project.tags.remove(tag)
-            
-            for tag in tags:
-                tag, created = Tag.objects.get_or_create(name=tag, defaults={'creator': request.user.profile})
-                project.tags.add(tag)
+class ProjectsView:
+    def projects(request):
+        search_query = {'search': request.GET.get("search")}
+        page_number = request.GET.get('page')
                 
-            messages.success(request, "Project created successfully")
-            if next:
-                return redirect(next)
-            return redirect("projects")
+        projects = ProjectService.get_projects(search_query=search_query)
+
+        paginator = Paginator(projects, 25)
+        projects = paginator.get_page(page_number)
         
-    context = {
-        "form": form
-    }
-    if next:
-        context["next"] = next
-    return render(request, f"{app_name}/create_project.html", context)
-
-
-@login_required(login_url="/user/login/")
-def update_project(request, pk):
-
-    if not has_permission(request.user.profile, pk):
-        return redirect("developer", pk=request.user.profile.id)
-    
-    next = request.GET.get("next") or None
-    
-    project = Project.objects.get(id=pk)
-    form = ProjectForm(instance=project)
-    if request.method == "POST":
+        context = {
+            'search_query': request.GET.get("search", ''),
+            "projects": projects,
+            "total_pages": paginator.num_pages,
+            "current_page": page_number,
+        }
         
-        tags_string = request.POST.get("tags")
-        tags = tags_string.split(",")
-        tags = [tag.strip() for tag in tags if len(tag.strip()) > 0]
-
-        form = ProjectForm(request.POST, request.FILES, instance=project)
-        if form.is_valid():
-            project = form.save()
+        if page_number and int(page_number) > paginator.num_pages:
+            return {
+                "message": "End of page."
+            }
         
-            for tag in project.tags.all():
-                project.tags.remove(tag)
-            
-            for tag in tags:
-                tag, created = Tag.objects.get_or_create(name=tag, defaults={'creator': request.user.profile})
-                project.tags.add(tag)
-            
-            messages.success(request, "Project updated successfully")
-            if next:
-                return redirect(next)
-            return redirect("projects")
-    context = {
-        "form": form,
-        "update": True,
-        "project": project
-    }
-    return render(request, f"{app_name}/create_project.html", context,)
+        return render(request, f"{app_name}/projects.html", context)
 
-
-@login_required(login_url="/user/login/")
-def delete_project(request):
-    if not has_permission(request.user.profile, pk):
-        return redirect("developer", pk=request.user.profile.id)
-    
-    
-    next = request.GET.get("next") or None
-    
-    if request.method == "POST":
-        pk = request.POST.get("pk")
+    def project(request, pk):
+        project = ProjectService.get_project_by_id(pk)
+        creator_projects = ProjectService.get_creator_projects(creator_id=project.creator.id, limit=5)
+                
+        project_reviews = ReviewService.get_reviews(project)
+        average_rating = ReviewService.average_rating(project)
         
-        project = Project.objects.get(id=pk)
+        context = {
+            "project": project,
+            "projects": creator_projects,
+            "total_reviews": len(project_reviews),
+            "average_rating": average_rating,
+        }
+        
+        return render(request, f"{app_name}/view_project.html", context=context)
+
+
+    @login_required(login_url="/user/login/")
+    def create_project(request):
+        form = ProjectForm()
+        next = request.GET.get("next")
         if request.method == "POST":
-            project.delete()
-            messages.error(request, "Project deleted successfully")
+            form = ProjectForm(request.POST, request.FILES)
+            ProjectService.create(request, form)
             if next:
                 return redirect(next)
             return redirect("projects")
-    else:
-        return JsonResponse({"error": "Bad Request"}, status=400)   
-    return JsonResponse({"error": "Bad Request"}, status=400)
+            
+        context = {
+            "form": form
+        }
+        if next:
+            context["next"] = next
+        return render(request, f"{app_name}/project_form.html", context)
+
+    @login_required(login_url="/user/login/")
+    @has_permission
+    def update_project(request, pk):
+        next = request.GET.get("next") or None
+        
+        project = ProjectService.get_project_by_id(pk)
+        
+        form = ProjectForm(instance=project)
+        
+        if request.method == "POST":
+            form = ProjectForm(request.POST, request.FILES, instance=project)
+            ProjectService.update(request, form)
+            
+            if next:
+                return redirect(next)
+            return redirect("projects")
+        
+        context = {
+            "form": form,
+            "update": True,
+            "project": project
+        }
+        return render(request, f"{app_name}/project_form.html", context)
+
+
+    @login_required(login_url="/user/login/")
+    @has_permission
+    def delete_project(request, pk):
+        
+        next = request.GET.get("next") or None
+        
+        if request.method == "POST":
+            
+            project = Project.objects.get(id=pk)
+            if request.method == "POST":
+                ProjectService.delete(request, project)
+                messages.error(request, "Project deleted successfully")
+                if next:
+                    return redirect(next)
+                return redirect("projects")
+        else:
+            return JsonResponse({"error": "Bad Request"}, status=400)   
+        return JsonResponse({"error": "Bad Request"}, status=400)

@@ -11,7 +11,8 @@ class ChatConsumer(WebsocketConsumer):
     
     def connect(self):
         
-        from users.views import update_online_status
+        from users.views import UserView
+        update_online_status = UserView.update_online_status
         
         self.user_socket_id = self.scope['url_route']['kwargs']['group_id']
         self.chat_group_id = f"{self.scope['user'].id}"
@@ -43,7 +44,9 @@ class ChatConsumer(WebsocketConsumer):
                 )
     
     def receive(self, text_data=None, bytes_data=None):
-        from users.views import get_user_profile_by_id, Channel
+        from users.views import UserView, Channel
+        
+        get_user_profile_by_id = UserView.get_user_profile_by_id
         from users.models import Message, ChatRecords
 
         text_data_json = json.loads(text_data)

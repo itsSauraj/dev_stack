@@ -12,3 +12,8 @@ def add(value, arg):
         return value + arg
     except (ValueError, TypeError):
         return value
+    
+@register.filter
+def create_for(value):
+    list = [item.lower() for item in value.split(" ")]
+    return "id_" + "_".join(list)

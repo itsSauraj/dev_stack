@@ -47,7 +47,7 @@ textarea.input {
   padding: 1.2rem 1.5rem;
   border-radius: 0.5rem;
   border: 2px solid var(--color-light);
-  transition: all 0.3s ease-in-out;
+  transition: border 0.3s ease-in-out;
   background-color: var(--color-bg);
 }
 

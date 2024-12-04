@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     
     'rest_framework',
     'django_filters',
+    'django_summernote',
     
     'channels',
 ]
@@ -148,6 +149,8 @@ STATICFILES_DIRS = [
 MEDIA_ROOT = os.path.join(BASE_DIR, 'static/images')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
 # STORAGES ={
 #     "staticfiles": {
 #         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -158,3 +161,48 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+SUMMERNOTE_CONFIG = {
+    'iframe': False,
+
+    # You can put custom Summernote settings
+    'summernote': {
+        'airMode': False,
+
+        'width': '100%',
+        'height': '480',
+
+
+        'toolbar': [
+            ['progress', ['undo', 'redo']],
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'clear']],
+            ['text', ['superscript', 'subscript', 'fontname', 'fontsize']],
+            ['fontname', ['helvetica', 'courier new', 'times new roman', 'arial']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph', 'height']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture', 'video']],
+            ['view', ['fullscreen', 'codeview']],
+        ],
+
+        'codemirror': {
+            'mode': 'htmlmixed',
+            'lineNumbers': 'true',
+            'theme': 'eclipse',
+            'font': 'monospace',
+        },
+    },
+
+    'attachment_require_authentication': True,
+
+    'disable_attachment': False,
+
+    'attachment_absolute_uri': True,
+
+    'css': (
+        '//cdnjs.cloudflare.com/ajax/libs/codemirror/5.29.0/theme/eclipse.min.css',
+    ),
+    'lazy': True,
+}

@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load my_tags %}
+
+{% block title %}
+  Create Project
+{% endblock %}
+
+{% block content %}
+
+  <div class="flex w-full justify-center items-center">
+    <div class="container w-[80%]">
+        <form method="POST" class="p-5 bg-gray-300 m-4 shadow-lg shadow-indigo-500/40"
+          {% if not update %}
+            action="{% url 'create-project' %}?next={% url 'profile' %}"
+          {% else %}
+            action="{% url 'update-project' project.id %}?next={% url 'profile' %}"
+          {% endif %}
+          enctype="multipart/form-data"
+          >
+          <a class="backButton" href="{% url 'profile' %}"><i class="fa-solid fa-chevron-left"></i></a>
+          <br>
+          <div class="flex justify-center">
+            <div class="p-1 relative group border-2 border-black w-[50%] aspect-video">
+                <img
+                  {% if not update %}
+                    src="{% static 'images/posters/default.jpg' %}"
+                  {% else %}
+                    src="{% static project.poster_url %}" 
+                  {% endif %}
+                  alt="preview_image" 
+                  class="w-full h-full"
+                >
+                <div class="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity w-full h-full" id="image_hover_cam">
+                    <i class="fa-solid fa-image text-white text-4xl"></i>
+                </div>
+            </div>
+          </div>
+          {% csrf_token %}
+          {% for field in form %}
+            <div class="form__field" id="{{ field.label|create_for }}_container">
+              <label for="{{ field.label|create_for }}">{{field.label}}</label>
+              {{field}}
+            </div>
+          {% endfor %}
+          <div class="form__field">
+            <label for="id_tags">Tags</label>
+            <input 
+              name="tags" 
+              type="text" 
+              id="id_tags" 
+              class="input input--text" 
+              placeholder="Tag1, Tag2, Tag3,..."
+              {% if update %}
+                value="{% for tag in project.tags.all %}{{ tag.name }}, {% endfor %}"
+              {% endif %}
+            />
+          </div>
+          <input type="submit" name="submit" class="mt-3 inline-flex text-white bg-indigo-500 border-0 py-1 px-2 focus:outline-none hover:bg-indigo-600 rounded" 
+          {% if not update %}
+            value="Create"
+          {% else %}
+            value="Update"
+          {% endif %}
+          >
+        </form>
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+              const fileInput = document.getElementById('id_poster');
+              const fileInputCointainer = document.getElementById('id_poster_container');
+              const previewImage = document.querySelector('img[alt="preview_image"]');
+              const imageHoverCam = document.getElementById('image_hover_cam');
+
+              fileInputCointainer.style.display = 'none';
+              fileInput.style.display = 'none';
+
+              imageHoverCam.addEventListener('click', function() {
+                  fileInput.click();
+              });
+
+              fileInput.addEventListener('change', function(event) {
+                  const file = event.target.files[0];
+                  if (file) {
+                      const reader = new FileReader();
+                      reader.onload = function(e) {
+                          previewImage.src = e.target.result;
+                      };
+                      reader.readAsDataURL(file);
+                  }
+              });
+
+              imageHoverCam.addEventListener('dragover', function(event) {
+                  event.preventDefault();
+                  event.stopPropagation();
+              });
+
+              imageHoverCam.addEventListener('drop', function(event) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  const file = event.dataTransfer.files[0];
+                  if (file) {
+                      const reader = new FileReader();    
+                      reader.onload = function(e) {
+                          previewImage.src = e.target.result;
+                      };
+                      reader.readAsDataURL(file);
+                      const dataTransfer = new DataTransfer();
+                      dataTransfer.items.add(file);
+                      fileInput.files = dataTransfer.files;
+                  }
+              });
+          });
+      </script>
+    </div>
+  </div>
+
+{% endblock %}

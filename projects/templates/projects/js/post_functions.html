@@ -86,7 +86,7 @@
   }
 
   function load_next_page() {
-    const page = document.getElementById("page");
+    const page = document.getElementById("page"); 
     load_current = +page.innerText + 1;
     get_review(load_current);
     document.getElementById("page").innerText = load_current;
@@ -97,7 +97,7 @@
 
     const review = {
       value: document.getElementById("value").value,
-      body: document.getElementById("formInput#text").value,
+      body: document.getElementById("project-review").value,
     };
 
     fetch(`/api/reviews/{{ project.id }}`, {
@@ -121,7 +121,7 @@
         const new_reviews = document.getElementById("reviews_container");
         create_review_node(data, new_reviews);
         document.getElementById("value").value = "1";
-        document.getElementById("formInput#text").value = "";
+        document.getElementById("project-review").value = "";
       })
       .catch((error) => {
         console.error("Error:", error);
