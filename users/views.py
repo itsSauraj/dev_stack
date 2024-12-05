@@ -2,6 +2,7 @@ import markdown
 import hashlib
 from uuid import uuid4
 from bs4 import BeautifulSoup
+from django.http import Http404
 
 from django.shortcuts import render, redirect
 from django.http import StreamingHttpResponse
@@ -206,8 +207,19 @@ class UserView:
     @staticmethod
     def view_profile(request, pk):
         
-        profile = Profile.objects.get(id=pk)
+        try:
+            profile = Profile.objects.get(id=pk)
+        except Profile.DoesNotExist:
+            raise Http404("Profile does not exist")
+        
         projects = profile.project_set.all()
+        
+        md = markdown.Markdown()
+        
+        for project in projects:
+            project.description = project.description[:200] + "..."
+            soup = BeautifulSoup(md.convert(project.description), 'html.parser')
+            project.description = soup.get_text()
         
         context = {"profile" : profile, "projects": projects, "view": True}
         return render(request, "users/account.html", context)

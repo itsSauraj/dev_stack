@@ -105,21 +105,8 @@
     text-decoration: underline;
 }
 
-.markdown-content img {
-    max-width: 300px;
-    height: auto;
-    display: block;
-    margin: 1em 0;
-}
 
-.markdown-content pre {
-    background-color: #ebebeb; /* Tailwind's bg-gray-900 */
-    border-radius: 0.5rem;    /* Tailwind's rounded-lg */
-    padding: 1rem;            /* Tailwind's p-4 */
-    overflow: auto;           /* Tailwind's overflow-auto */
-    font-family: "Courier New", Courier, monospace; /* Tailwind's font-mono */
-    font-size: 1.2rem;      /* Tailwind's text-sm (14px) */
-    color: black;
-    border: 2px solid #c0bfbf; 
-    margin: 1rem 0;
+.markdown-content pre *{
+    background-color: rgb(38, 37, 43);
+    border-radius: 8px;
 }

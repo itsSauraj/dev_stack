@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure--bt#9*%-&ynqqy@9&!fe=fs8q6b^nn*w&=6$60)d3x==85h!(7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -164,7 +164,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 SUMMERNOTE_CONFIG = {
-    'iframe': False,
+    'iframe': True,
 
     # You can put custom Summernote settings
     'summernote': {
@@ -183,7 +183,7 @@ SUMMERNOTE_CONFIG = {
             ['color', ['color']],
             ['para', ['ul', 'ol', 'paragraph', 'height']],
             ['table', ['table']],
-            ['insert', ['link', 'picture', 'video']],
+            ['insert', ['link', 'picture', 'video', 'hr']],
             ['view', ['fullscreen', 'codeview']],
         ],
 
@@ -203,6 +203,13 @@ SUMMERNOTE_CONFIG = {
 
     'css': (
         '//cdnjs.cloudflare.com/ajax/libs/codemirror/5.29.0/theme/eclipse.min.css',
+        '//unpkg.com/@highlightjs/cdn-assets@10.7.1/styles/default.min.css',
+        '//unpkg.com/@highlightjs/cdn-assets@10.7.1/styles/night-owl.min.css',
+    ),
+    
+    'js': (
+        '//cdnjs.cloudflare.com/ajax/libs/codemirror/5.29.0/mode/htmlmixed/htmlmixed.min.js',
+        '//unpkg.com/@highlightjs/cdn-assets@10.7.1/lib/highlight.min.js',
     ),
     'lazy': True,
 }

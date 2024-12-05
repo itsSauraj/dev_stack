@@ -13,6 +13,13 @@
 
   <script src="https://kit.fontawesome.com/d13c576e44.js" crossorigin="anonymous"></script>
 
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="https://unpkg.com/@highlightjs/cdn-assets@10.7.1/styles/default.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/@highlightjs/cdn-assets@10.7.1/styles/night-owl.min.css" />
+
+  <script src="https://unpkg.com/@highlightjs/cdn-assets@10.7.1/highlight.min.js"></script>
+
 </head>
 <body class="bg-[#f3f5f2]">
   {%  include 'navbar.html' %}
@@ -31,6 +38,9 @@
   {% block content %}
   {% endblock %}
   
+  <script src="https://unpkg.com/@highlightjs/cdn-assets@10.7.1/highlight.min.js"></script>
+
+  
   {%  include 'footer.html' %}
 
   <script>
@@ -45,6 +55,36 @@
         alert.style.display = 'none';
       }, 3000);
     });
+
+    // Invoke Functions Call on Document Loaded
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('pre').forEach((block) => {
+        content = block.innerText;
+        block.classList.add('codeblock');
+        const regex = /~(.*?)~/g;
+        let match;
+        let extractedLanguages = [];
+        while ((match = regex.exec(content)) !== null) {
+          const code = match[1];
+          extractedLanguages.push(code);
+          content = content.replace(match[0], '');
+        }
+        content = '<code class="' + extractedLanguages.join(' ') + '" style="padding: 15px;" >' + content.trim() + '</code>';
+        block.innerHTML = content.trim();
+      });
+
+      hljs.highlightAll();
+    });
+
+
+    let alertWrapper = document.querySelector('.alert')
+    let alertClose = document.querySelector('.alert__close')
+
+    if (alertWrapper) {
+      alertClose.addEventListener('click', () =>
+        alertWrapper.style.display = 'none'
+      )
+    }
 
   </script>
 </body>
