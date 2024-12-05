@@ -12,7 +12,6 @@ class ChatConsumer(WebsocketConsumer):
     def connect(self):
         
         from users.views import UserView
-        update_online_status = UserView.update_online_status
         
         self.user_socket_id = self.scope['url_route']['kwargs']['group_id']
         self.chat_group_id = f"{self.scope['user'].id}"
@@ -28,16 +27,16 @@ class ChatConsumer(WebsocketConsumer):
         )
         
         self.accept()    
-        online_status = update_online_status(self.chat_group_id, self.user_socket_id, True)
+        online_status = UserView.update_online_status(self.chat_group_id, self.user_socket_id, True)
 
 
     def disconnect(self, close_code):
         
-        from users.views import update_online_status
+        from users.views import UserView
         
         if hasattr(self.scope, 'user_groups'):
             for group in self.scope['user_groups']:
-                online_status = update_online_status(self.group.id, None, False)
+                online_status = UserView.update_online_status(self.group.id, None, False)
                 async_to_sync(self.channel_layer.group_discard)(
                     group,
                     self.channel_name
@@ -46,7 +45,6 @@ class ChatConsumer(WebsocketConsumer):
     def receive(self, text_data=None, bytes_data=None):
         from users.views import UserView, Channel
         
-        get_user_profile_by_id = UserView.get_user_profile_by_id
         from users.models import Message, ChatRecords
 
         text_data_json = json.loads(text_data)
@@ -54,8 +52,8 @@ class ChatConsumer(WebsocketConsumer):
 
         if action == 'send-message':
             # Existing message send logic
-            sender = get_user_profile_by_id(text_data_json['sender'])
-            receiver = get_user_profile_by_id(text_data_json['receiver'])
+            sender = UserView.get_user_profile_by_id(text_data_json['sender'])
+            receiver = UserView.get_user_profile_by_id(text_data_json['receiver'])
             message = text_data_json['message']
             sent_at = text_data_json['sent_at']
             chat_room_id = text_data_json['chat_room_id']

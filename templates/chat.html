@@ -9,16 +9,19 @@ Chat
 
 {% block content %}
     <div class="flex h-[92svh] overflow-y-hidden">  
-        <div class="bg-gray-200 w-[25%] h-[100%] overflow-y-scroll"> 
+        <div class="bg-gray-200 w-[300px] flex-grow overflow-y-scroll"> 
             <div class="p-3 bg-gray-300">
                 <h3 class="text-center text-2xl text-uppercase">Chats</h3>
             </div>
             <div class="p-3 flex flex-col gap-1">
                 {% for chat in all_chats %}
-                    <a class="h-[8svh] flex bg-gray-200 justify-start items-center gap-4 p-2 border-black
-                    {% if chat.members.0.profile.id == opened_chat.id %} bg-gray-300 {% endif %}
-                    hover:bg-gray-400 transition-all duration-300 rounded-lg"
-                    style="height: fit-content;"
+                    <a class="h-[8svh] flex bg-gray-200 justify-start items-center gap-4 p-2 border-black hover:bg-gray-400 transition-all duration-300 rounded-lg"
+                    style="
+                        height: fit-content;
+                        {% if chat.members.0.profile.id == opened_chat.id %}
+                            background-color: rgba(0, 0 , 0, 0.15);
+                        {% endif %}
+                    "
                     href="/chat/{{ chat.members.0.profile.id }}"
                     data-chat-id="{{ chat.id }}"
                     >
@@ -53,8 +56,12 @@ Chat
                     <img src="{% static opened_chat.avatar_url %}" alt="No Avatar" class="w-[45px] h-[45px] rounded-full border-2 border-black">
                     <h1 class="text-2xl text-center">{{ opened_chat.name }}</h1>
                 </a>
-                <div class="flex flex-grow w-full justify-center items-end">
-                    <div id="chat-screen" style="max-height: 80svh;" class="p-4 grid grid-cols-1 w-full overflow-y-scroll justify-bottom">
+                <div class="relative flex flex-grow w-full justify-center items-end">
+                    <div
+                        class="absolute top-0 left-0 w-full h-full z-[-1] bg-cover bg-center bg-no-repeat opacity-10"
+                        style="background: url('{% static 'images/pattern.jpg' %}');"
+                    ></div>
+                    <div id="chat-screen" style="max-height: 75svh;" class="p-4 grid grid-cols-1 w-full overflow-y-scroll justify-bottom">
                         {% for message in chat_messages %}
                         <div class="p-4 bg-[#373c43] rounded-lg my-2 w-fit-content m-w-[80%] justify-self-start {% if message.sender.id == request.user.id %}text-end bg-[#8b5cf6] justify-self-end{% endif %}" style="height: fit-content;" data-message-id="{{ message.id }}" data-is-read="{{ message.is_read }}" data-sender-id="{{ message.sender.id }}">
                             <p class="text-2xl text-white">{{ message.message }}</p>
@@ -97,9 +104,7 @@ Chat
 
         const chatSocket = new WebSocket(url);
 
-        chatSocket.onopen = (event) => {
-            console.log('Connected to the chat server');
-        }
+        chatSocket.onopen = (event) => {}
 
         chatSocket.onmessage = (event) => {
             let data = JSON.parse(event.data);
@@ -124,7 +129,6 @@ Chat
                     `;
                 
                 if (data.chat_room_id != '{{ chat_room_id }}') {
-                    console.log(`Message received from another chat room id ${data.chat_room_id}`);
                     const chat_messsage_received_id = data.chat_room_id;
                     const chat_count_element = document.querySelector(`[data-chat-id="${chat_messsage_received_id}"]`).querySelector('span');
                     chat_count_element.innerText = data.unread_message_count;
@@ -236,7 +240,6 @@ Chat
                 const isRead = entry.target.dataset.isRead;
 
                 if ("{{ request.user.id }}" != senderID && isRead == "False") {
-                    console.log('Marking as read');
                     chatSocket.send(JSON.stringify({
                         "action": "mark-as-read",
                         "message_id": messageID,
