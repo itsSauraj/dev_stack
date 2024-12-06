@@ -4,7 +4,7 @@ beautifulsoup4==4.12.3
 bleach==6.2.0
 channels==4.2.0
 click==8.1.7
-Django==5.1.2
+Django==5.1.4
 django-filter==24.3
 django-summernote==0.8.20.0
 djangorestframework==3.15.2
